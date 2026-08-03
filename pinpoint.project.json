@@ -1,0 +1,918 @@
+{
+  "project": {
+    "name": "Pinpoint",
+    "tagline": "An interactive atlas of the United States.",
+    "description": "A satellite-map explorer where you zoom into any U.S. state (and Washington, D.C.), read when it joined the Union, where its name came from, and the historic sites worth standing in front of. Selecting a state drops its landmarks onto the map and lists them in a side panel; clicking a site tells its story.",
+    "repository": "https://github.com/FortuneTR/Pinpoint",
+    "author": "Fortune (FortuneTR)",
+    "location": "Jacksonville, FL",
+    "license": "MIT",
+    "version": "0.1.0",
+    "status": "prototype",
+    "created": "2026-08-02"
+  },
+  "vision": {
+    "summary": "A flat / Google-Earth-style pinpoint map of the United States that turns geography into a story: pick a place, learn how it came to be, and discover the history standing on it.",
+    "originalUserStory": "A zoomable satellite map where you can select any state or city and get interesting facts starting with the MM/DD/YYYY it was formed and who sought out the name. Within a state, historic sites appear on the map — click one (e.g. the Statue of Liberty) for its facts — and a list of every historic site in that state pulls up on the right. Applies to all 50 states, all U.S. cities, and Washington, D.C.",
+    "coverage": [
+      "All 50 states",
+      "Washington, D.C.",
+      "U.S. cities (roadmap)"
+    ],
+    "experiencePillars": [
+      "See it: a satellite basemap with smooth Google-Earth-style zoom.",
+      "Know it: statehood date, admission order, and name origin per place.",
+      "Explore it: historic-site pins on the map + a live list in the side panel.",
+      "Dive in: click any site to fly the camera in and read its story."
+    ]
+  },
+  "scope": {
+    "dataLayers": [
+      {
+        "layer": "states",
+        "approxCount": 51,
+        "strategy": "Hand-authored once (finite).",
+        "status": "complete"
+      },
+      {
+        "layer": "cities",
+        "approxCount": "~19,000 incorporated places",
+        "strategy": "Ingest from Census + Wikidata; curate major cities, generate the rest.",
+        "status": "planned"
+      },
+      {
+        "layer": "historicSites",
+        "approxCount": "~95,000 (National Register)",
+        "strategy": "Ingest from NPS API + Wikidata; curate marquee sites.",
+        "status": "seeded (7 states)"
+      }
+    ],
+    "honestChallenge": "The map is the easy part — data is the project. States are finite and hand-authored, but cities and historic sites are far too numerous to write by hand. The plan is 'seed + feed': curate the small stuff, ingest the big stuff from free public APIs, and cache locally so the app stays fast."
+  },
+  "features": {
+    "implemented": [
+      "Full-screen satellite basemap (Esri World Imagery) with zoom controls.",
+      "Brass marker for every state + D.C.; click to open a state dossier.",
+      "State dossier: statehood date (MM/DD/YYYY), admission order, name origin, shown as an instrument-style readout.",
+      "Historic-site pins drop on state select; camera flies to fit them.",
+      "Right-side panel lists every historic site in the selected state.",
+      "Click a site pin OR its list row to read the story and fly the camera in.",
+      "'Back to the U.S.' reset restores the national view.",
+      "Responsive: side panel becomes a bottom sheet on mobile."
+    ],
+    "planned": [
+      "Real state boundaries (GeoJSON) so clicking anywhere in a state selects it.",
+      "Historic sites at scale via NPS/Wikidata ingest, loaded per state on demand.",
+      "City zoom tier with founding date + name origin.",
+      "Search box to jump to any state or site.",
+      "Shareable deep links (?state=NY&site=statue-of-liberty).",
+      "Timeline scrubber to filter sites by era.",
+      "Source citations shown per fact."
+    ]
+  },
+  "techStack": {
+    "frontend": "Vanilla HTML / CSS / JavaScript (no build step).",
+    "mapEngine": "Leaflet 1.9.4 (open-source, no API key).",
+    "basemap": "Esri World Imagery tiles + World Boundaries and Places reference overlay (free, no key).",
+    "fonts": {
+      "display": "Fraunces",
+      "body": "Inter",
+      "data": "IBM Plex Mono"
+    },
+    "hosting": "GitHub Pages (static, free).",
+    "futureBackend": "Optional Flask API (or pre-generated JSON) once the data pipeline lands.",
+    "upgradePath": "Swap Leaflet for Mapbox GL JS or CesiumJS for a true 3D globe; the data model carries over."
+  },
+  "designSystem": {
+    "concept": "A cartographic recon console — satellite imagery with a brass/surveyor accent and data shown as instrument readouts.",
+    "colors": {
+      "ink": "#0E1418",
+      "ink2": "#131C22",
+      "line": "#24333C",
+      "brass": "#D9A441",
+      "brassDark": "#A87A28",
+      "teal": "#4FB0A5",
+      "parchment": "#ECE6D8",
+      "muted": "#8A9BA5"
+    },
+    "typography": {
+      "display": "Fraunces (wordmark, place names)",
+      "body": "Inter (UI text)",
+      "mono": "IBM Plex Mono (dates, coordinates, labels)"
+    },
+    "signature": "Statehood dates and site data rendered as brass mono 'instrument readouts' — the MM/DD/YYYY the user cared about, styled like a survey instrument."
+  },
+  "dataModel": {
+    "state": {
+      "name": "string — full state name",
+      "abbr": "string — 2-letter code (DC for the district)",
+      "lat": "number — approx. center latitude (map pin)",
+      "lng": "number — approx. center longitude (map pin)",
+      "admitted": "string — statehood date MM/DD/YYYY (ratification date for the original 13)",
+      "order": "string — admission order, or a note for D.C.",
+      "origin": "string — short name-origin summary",
+      "sites": "Site[] — historic sites in this state"
+    },
+    "site": {
+      "name": "string — site name",
+      "est": "string — founding/built/dedicated label",
+      "lat": "number — site latitude",
+      "lng": "number — site longitude",
+      "fact": "string — one-paragraph interesting fact"
+    }
+  },
+  "dataStrategy": {
+    "approach": "seed + feed — curate finite data by hand, ingest large data from free APIs, cache locally.",
+    "sources": [
+      {
+        "name": "National Park Service API",
+        "use": "Parks & historic sites with descriptions and coordinates.",
+        "url": "https://www.nps.gov/subjects/developer/",
+        "auth": "Free API key"
+      },
+      {
+        "name": "Wikidata / Wikipedia REST API",
+        "use": "Landmarks, founding dates, name origins, coordinates.",
+        "url": "https://www.wikidata.org/",
+        "auth": "None"
+      },
+      {
+        "name": "U.S. Census (Gazetteer / TIGER)",
+        "use": "Authoritative place names, coordinates, boundaries.",
+        "url": "https://www.census.gov/geographies/",
+        "auth": "None"
+      },
+      {
+        "name": "National Register of Historic Places",
+        "use": "Definitive list of U.S. historic sites.",
+        "url": "https://www.nps.gov/subjects/nationalregister/",
+        "auth": "None"
+      }
+    ],
+    "caveat": "Seed statehood dates and name origins are best-effort; verify against the Census and state archives before treating as authoritative, and cite sources in the UI."
+  },
+  "repoStructure": {
+    "index.html": "Self-contained prototype (data inlined) — opens with no server.",
+    "data/states.js": "Seed dataset as a JS module (window.PINPOINT_STATES).",
+    "data/states.json": "Same seed dataset as pure JSON (fetch this in the modular build).",
+    "pinpoint.project.json": "This file — the full project ideation as structured JSON.",
+    "css/": "(future) extracted styles.",
+    "js/": "(future) extracted app logic.",
+    "scripts/": "(future) data-ingest scripts (NPS, Wikidata, Census -> JSON).",
+    "README.md": "Human-readable overview.",
+    "LICENSE": "MIT."
+  },
+  "roadmap": [
+    {
+      "phase": 1,
+      "name": "Prototype",
+      "status": "done",
+      "tasks": [
+        "Working map",
+        "All-state dossiers",
+        "Seeded sites",
+        "Side panel"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Real state polygons",
+      "status": "planned",
+      "tasks": [
+        "Load Census/GeoJSON boundaries",
+        "Click anywhere in a state to select",
+        "Highlight selected shape"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Sites at scale",
+      "status": "planned",
+      "tasks": [
+        "scripts/ingest_nps.js",
+        "Pull NPS + Wikidata into data/sites.<state>.json",
+        "Lazy-load per state",
+        "Source links per site"
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Cities",
+      "status": "planned",
+      "tasks": [
+        "City zoom tier",
+        "Major-city pins with founding date + name origin",
+        "Census + Wikidata"
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "Polish",
+      "status": "planned",
+      "tasks": [
+        "Search box",
+        "Shareable deep links",
+        "Timeline scrubber",
+        "Random-landmark button"
+      ]
+    }
+  ],
+  "deployment": {
+    "local": "python3 -m http.server 8000  # then visit http://localhost:8000",
+    "githubPages": {
+      "steps": [
+        "Push to main",
+        "Settings > Pages > Source: main / root"
+      ],
+      "liveUrl": "https://fortunetr.github.io/Pinpoint/"
+    }
+  },
+  "seedData": {
+    "note": "Best-effort seed data — verify before publishing. 51 records (50 states + D.C.).",
+    "generatedFrom": "data/states.js",
+    "stateCount": 51,
+    "siteCount": 22,
+    "statesWithSites": [
+      "CA",
+      "FL",
+      "MA",
+      "NY",
+      "PA",
+      "TX",
+      "DC"
+    ],
+    "states": [
+      {
+        "name": "Alabama",
+        "abbr": "AL",
+        "lat": 32.8,
+        "lng": -86.8,
+        "admitted": "12/14/1819",
+        "order": "22nd state",
+        "origin": "From the Alabama (Alibamu) people; often glossed from Choctaw as “thicket clearers.”",
+        "sites": []
+      },
+      {
+        "name": "Alaska",
+        "abbr": "AK",
+        "lat": 63.5,
+        "lng": -152,
+        "admitted": "01/03/1959",
+        "order": "49th state",
+        "origin": "From Aleut/Unangan “Alaxsxaq” — roughly “the mainland.”",
+        "sites": []
+      },
+      {
+        "name": "Arizona",
+        "abbr": "AZ",
+        "lat": 34.3,
+        "lng": -111.7,
+        "admitted": "02/14/1912",
+        "order": "48th state",
+        "origin": "Likely from O’odham “ali ṣonak” (small spring); a Basque origin is also proposed.",
+        "sites": []
+      },
+      {
+        "name": "Arkansas",
+        "abbr": "AR",
+        "lat": 34.8,
+        "lng": -92.4,
+        "admitted": "06/15/1836",
+        "order": "25th state",
+        "origin": "A French rendering of a Sioux word for the Quapaw people.",
+        "sites": []
+      },
+      {
+        "name": "California",
+        "abbr": "CA",
+        "lat": 37.2,
+        "lng": -119.3,
+        "admitted": "09/09/1850",
+        "order": "31st state",
+        "origin": "From a mythical island in the 1510 Spanish romance “Las Sergas de Esplandián.”",
+        "sites": [
+          {
+            "name": "Golden Gate Bridge",
+            "est": "Opened 1937",
+            "lat": 37.8199,
+            "lng": -122.4783,
+            "fact": "When it opened it was the longest suspension-bridge span on Earth. Its “International Orange” color was chosen partly for visibility in San Francisco’s fog."
+          },
+          {
+            "name": "Alcatraz Island",
+            "est": "Federal prison 1934–1963",
+            "lat": 37.8267,
+            "lng": -122.423,
+            "fact": "“The Rock” held Al Capone and George “Machine Gun” Kelly. No confirmed successful escape was ever proven; the 1962 escape remains officially unsolved."
+          },
+          {
+            "name": "Yosemite National Park",
+            "est": "Protected 1864",
+            "lat": 37.8651,
+            "lng": -119.5383,
+            "fact": "Lincoln signed the Yosemite Grant during the Civil War — the first time the U.S. set aside land specifically for preservation, seeding the national-park idea."
+          }
+        ]
+      },
+      {
+        "name": "Colorado",
+        "abbr": "CO",
+        "lat": 39,
+        "lng": -105.5,
+        "admitted": "08/01/1876",
+        "order": "38th state",
+        "origin": "Spanish for “colored/reddish,” after the silt-laden Colorado River.",
+        "sites": []
+      },
+      {
+        "name": "Connecticut",
+        "abbr": "CT",
+        "lat": 41.6,
+        "lng": -72.7,
+        "admitted": "01/09/1788",
+        "order": "5th state",
+        "origin": "From Mohegan-Pequot “quinnitukqut” — “at the long tidal river.”",
+        "sites": []
+      },
+      {
+        "name": "Delaware",
+        "abbr": "DE",
+        "lat": 39,
+        "lng": -75.5,
+        "admitted": "12/07/1787",
+        "order": "1st state",
+        "origin": "For Lord De La Warr (Thomas West), an early governor of Virginia.",
+        "sites": []
+      },
+      {
+        "name": "Florida",
+        "abbr": "FL",
+        "lat": 28.6,
+        "lng": -82.4,
+        "admitted": "03/03/1845",
+        "order": "27th state",
+        "origin": "Spanish “Pascua Florida” (Feast of Flowers/Easter), named by Ponce de León in 1513.",
+        "sites": [
+          {
+            "name": "Castillo de San Marcos",
+            "est": "Built 1672–1695",
+            "lat": 29.8975,
+            "lng": -81.3115,
+            "fact": "In St. Augustine — the oldest masonry fort in the continental U.S. Its walls are coquina, a soft shell-stone that absorbed cannonballs instead of shattering."
+          },
+          {
+            "name": "Kennedy Space Center",
+            "est": "Established 1962",
+            "lat": 28.5729,
+            "lng": -80.649,
+            "fact": "Launch site for every crewed U.S. Moon mission and the Space Shuttle. Launch Complex 39A sent Apollo 11 skyward on July 16, 1969."
+          },
+          {
+            "name": "St. Augustine (Old Town)",
+            "est": "Founded 1565",
+            "lat": 29.8947,
+            "lng": -81.3145,
+            "fact": "The oldest continuously occupied European-established settlement in the continental U.S. — predating Jamestown by 42 years."
+          }
+        ]
+      },
+      {
+        "name": "Georgia",
+        "abbr": "GA",
+        "lat": 32.7,
+        "lng": -83.5,
+        "admitted": "01/02/1788",
+        "order": "4th state",
+        "origin": "Named for King George II of Great Britain.",
+        "sites": []
+      },
+      {
+        "name": "Hawaii",
+        "abbr": "HI",
+        "lat": 20.7,
+        "lng": -156.4,
+        "admitted": "08/21/1959",
+        "order": "50th state",
+        "origin": "Possibly from “Hawaiki,” the legendary Polynesian homeland.",
+        "sites": []
+      },
+      {
+        "name": "Idaho",
+        "abbr": "ID",
+        "lat": 44.4,
+        "lng": -114.6,
+        "admitted": "07/03/1890",
+        "order": "43rd state",
+        "origin": "A coined word once claimed to be Shoshone; its true origin is disputed.",
+        "sites": []
+      },
+      {
+        "name": "Illinois",
+        "abbr": "IL",
+        "lat": 40,
+        "lng": -89.2,
+        "admitted": "12/03/1818",
+        "order": "21st state",
+        "origin": "French rendering of the name of the Illinois (Illini) confederation.",
+        "sites": []
+      },
+      {
+        "name": "Indiana",
+        "abbr": "IN",
+        "lat": 39.9,
+        "lng": -86.3,
+        "admitted": "12/11/1816",
+        "order": "19th state",
+        "origin": "Latin-style coinage meaning “Land of the Indians.”",
+        "sites": []
+      },
+      {
+        "name": "Iowa",
+        "abbr": "IA",
+        "lat": 42,
+        "lng": -93.5,
+        "admitted": "12/28/1846",
+        "order": "29th state",
+        "origin": "From the Ioway (Iowa) people.",
+        "sites": []
+      },
+      {
+        "name": "Kansas",
+        "abbr": "KS",
+        "lat": 38.5,
+        "lng": -98.4,
+        "admitted": "01/29/1861",
+        "order": "34th state",
+        "origin": "From the Kansa (Kaw) people — “people of the south wind.”",
+        "sites": []
+      },
+      {
+        "name": "Kentucky",
+        "abbr": "KY",
+        "lat": 37.5,
+        "lng": -85.3,
+        "admitted": "06/01/1792",
+        "order": "15th state",
+        "origin": "From an Iroquoian word, often glossed “meadow land” or “land of tomorrow.”",
+        "sites": []
+      },
+      {
+        "name": "Louisiana",
+        "abbr": "LA",
+        "lat": 31,
+        "lng": -92,
+        "admitted": "04/30/1812",
+        "order": "18th state",
+        "origin": "Named for King Louis XIV of France.",
+        "sites": []
+      },
+      {
+        "name": "Maine",
+        "abbr": "ME",
+        "lat": 45.4,
+        "lng": -69.2,
+        "admitted": "03/15/1820",
+        "order": "23rd state",
+        "origin": "Likely the nautical “mainland,” or the French province of Maine.",
+        "sites": []
+      },
+      {
+        "name": "Maryland",
+        "abbr": "MD",
+        "lat": 39,
+        "lng": -76.8,
+        "admitted": "04/28/1788",
+        "order": "7th state",
+        "origin": "For Queen Henrietta Maria, wife of King Charles I.",
+        "sites": []
+      },
+      {
+        "name": "Massachusetts",
+        "abbr": "MA",
+        "lat": 42.3,
+        "lng": -71.8,
+        "admitted": "02/06/1788",
+        "order": "6th state",
+        "origin": "From the Massachusett people — “at/near the great hill.”",
+        "sites": [
+          {
+            "name": "Faneuil Hall",
+            "est": "Opened 1743",
+            "lat": 42.36,
+            "lng": -71.0568,
+            "fact": "Boston’s “Cradle of Liberty” — the meeting hall where colonists debated resistance to British taxes in the years before the Revolution."
+          },
+          {
+            "name": "Plymouth Rock",
+            "est": "Landing tradition 1620",
+            "lat": 41.9584,
+            "lng": -70.662,
+            "fact": "The traditional landing spot of the Mayflower Pilgrims. The rock now sits under a granite portico at the water’s edge."
+          },
+          {
+            "name": "USS Constitution",
+            "est": "Launched 1797",
+            "lat": 42.3724,
+            "lng": -71.0562,
+            "fact": "“Old Ironsides” — the world’s oldest commissioned warship still afloat. British shot seemed to bounce off her oak hull in the War of 1812."
+          }
+        ]
+      },
+      {
+        "name": "Michigan",
+        "abbr": "MI",
+        "lat": 44.3,
+        "lng": -85.4,
+        "admitted": "01/26/1837",
+        "order": "26th state",
+        "origin": "From Ojibwe “mishigami” — “large water” (the Great Lakes).",
+        "sites": []
+      },
+      {
+        "name": "Minnesota",
+        "abbr": "MN",
+        "lat": 46.3,
+        "lng": -94.3,
+        "admitted": "05/11/1858",
+        "order": "32nd state",
+        "origin": "From Dakota “mni sota” — “cloudy” or “sky-tinted” water.",
+        "sites": []
+      },
+      {
+        "name": "Mississippi",
+        "abbr": "MS",
+        "lat": 32.7,
+        "lng": -89.7,
+        "admitted": "12/10/1817",
+        "order": "20th state",
+        "origin": "From Ojibwe “misi-ziibi” — “great river.”",
+        "sites": []
+      },
+      {
+        "name": "Missouri",
+        "abbr": "MO",
+        "lat": 38.4,
+        "lng": -92.5,
+        "admitted": "08/10/1821",
+        "order": "24th state",
+        "origin": "From the Missouria people — “people of the big canoes.”",
+        "sites": []
+      },
+      {
+        "name": "Montana",
+        "abbr": "MT",
+        "lat": 47,
+        "lng": -109.6,
+        "admitted": "11/08/1889",
+        "order": "41st state",
+        "origin": "From Spanish/Latin “montaña” — “mountain.”",
+        "sites": []
+      },
+      {
+        "name": "Nebraska",
+        "abbr": "NE",
+        "lat": 41.5,
+        "lng": -99.8,
+        "admitted": "03/01/1867",
+        "order": "37th state",
+        "origin": "From Otoe/Omaha “ñí brásge” — “flat water” (the Platte River).",
+        "sites": []
+      },
+      {
+        "name": "Nevada",
+        "abbr": "NV",
+        "lat": 39.3,
+        "lng": -116.6,
+        "admitted": "10/31/1864",
+        "order": "36th state",
+        "origin": "Spanish “nevada” — “snow-covered,” from the Sierra Nevada.",
+        "sites": []
+      },
+      {
+        "name": "New Hampshire",
+        "abbr": "NH",
+        "lat": 43.7,
+        "lng": -71.6,
+        "admitted": "06/21/1788",
+        "order": "9th state",
+        "origin": "Named for the English county of Hampshire.",
+        "sites": []
+      },
+      {
+        "name": "New Jersey",
+        "abbr": "NJ",
+        "lat": 40.1,
+        "lng": -74.7,
+        "admitted": "12/18/1787",
+        "order": "3rd state",
+        "origin": "Named for the Channel Island of Jersey.",
+        "sites": []
+      },
+      {
+        "name": "New Mexico",
+        "abbr": "NM",
+        "lat": 34.4,
+        "lng": -106.1,
+        "admitted": "01/06/1912",
+        "order": "47th state",
+        "origin": "Spanish “Nuevo México,” used long before the modern country of Mexico existed.",
+        "sites": []
+      },
+      {
+        "name": "New York",
+        "abbr": "NY",
+        "lat": 42.9,
+        "lng": -75.5,
+        "admitted": "07/26/1788",
+        "order": "11th state",
+        "origin": "For the Duke of York (later King James II), after the English took New Amsterdam.",
+        "sites": [
+          {
+            "name": "Statue of Liberty",
+            "est": "Dedicated 10/28/1886",
+            "lat": 40.6892,
+            "lng": -74.0445,
+            "fact": "A gift from France designed by Frédéric-Auguste Bartholdi. Its internal iron skeleton was engineered by Gustave Eiffel, who later built his tower in Paris."
+          },
+          {
+            "name": "Ellis Island",
+            "est": "Opened 1892",
+            "lat": 40.6995,
+            "lng": -74.0397,
+            "fact": "The nation’s busiest immigration station until 1954 — roughly 12 million people passed through its Great Hall on their way into America."
+          },
+          {
+            "name": "9/11 Memorial & One WTC",
+            "est": "Memorial opened 2011",
+            "lat": 40.7115,
+            "lng": -74.0134,
+            "fact": "Twin reflecting pools sit in the footprints of the original towers. One World Trade Center rises to 1,776 feet — a nod to 1776."
+          },
+          {
+            "name": "Niagara Falls State Park",
+            "est": "Established 1885",
+            "lat": 43.0828,
+            "lng": -79.0648,
+            "fact": "The oldest state park in the United States, laid out by Frederick Law Olmsted — the landscape architect behind Central Park."
+          }
+        ]
+      },
+      {
+        "name": "North Carolina",
+        "abbr": "NC",
+        "lat": 35.6,
+        "lng": -79.4,
+        "admitted": "11/21/1789",
+        "order": "12th state",
+        "origin": "For King Charles I (Latin “Carolus”).",
+        "sites": []
+      },
+      {
+        "name": "North Dakota",
+        "abbr": "ND",
+        "lat": 47.4,
+        "lng": -100.5,
+        "admitted": "11/02/1889",
+        "order": "39th state",
+        "origin": "From the Dakota (Sioux) people — “friend/ally.”",
+        "sites": []
+      },
+      {
+        "name": "Ohio",
+        "abbr": "OH",
+        "lat": 40.3,
+        "lng": -82.8,
+        "admitted": "03/01/1803",
+        "order": "17th state",
+        "origin": "From Seneca “ohi:yo’” — “great river.”",
+        "sites": []
+      },
+      {
+        "name": "Oklahoma",
+        "abbr": "OK",
+        "lat": 35.6,
+        "lng": -97.5,
+        "admitted": "11/16/1907",
+        "order": "46th state",
+        "origin": "From Choctaw “okla humma” — “red people.”",
+        "sites": []
+      },
+      {
+        "name": "Oregon",
+        "abbr": "OR",
+        "lat": 43.9,
+        "lng": -120.6,
+        "admitted": "02/14/1859",
+        "order": "33rd state",
+        "origin": "Origin genuinely uncertain; several competing theories exist.",
+        "sites": []
+      },
+      {
+        "name": "Pennsylvania",
+        "abbr": "PA",
+        "lat": 40.9,
+        "lng": -77.8,
+        "admitted": "12/12/1787",
+        "order": "2nd state",
+        "origin": "“Penn’s Woods” — honoring Admiral William Penn, father of founder William Penn.",
+        "sites": [
+          {
+            "name": "Independence Hall",
+            "est": "Completed 1753",
+            "lat": 39.9489,
+            "lng": -75.15,
+            "fact": "In Philadelphia — both the Declaration of Independence (1776) and the U.S. Constitution (1787) were debated and adopted inside this red-brick building."
+          },
+          {
+            "name": "Liberty Bell",
+            "est": "Cast 1752",
+            "lat": 39.9496,
+            "lng": -75.1503,
+            "fact": "Famous for its jagged crack. Its inscription — “proclaim liberty throughout all the land” — made it an icon for abolitionists in the 1800s."
+          },
+          {
+            "name": "Gettysburg Battlefield",
+            "est": "Battle 1863",
+            "lat": 39.8117,
+            "lng": -77.2253,
+            "fact": "Site of the Civil War’s bloodiest battle and, months later, Lincoln’s 272-word Gettysburg Address."
+          }
+        ]
+      },
+      {
+        "name": "Rhode Island",
+        "abbr": "RI",
+        "lat": 41.7,
+        "lng": -71.5,
+        "admitted": "05/29/1790",
+        "order": "13th state",
+        "origin": "Possibly for Aquidneck’s likeness to Rhodes, or Dutch “Roodt Eylandt” (red island).",
+        "sites": []
+      },
+      {
+        "name": "South Carolina",
+        "abbr": "SC",
+        "lat": 33.9,
+        "lng": -80.9,
+        "admitted": "05/23/1788",
+        "order": "8th state",
+        "origin": "For King Charles I (Latin “Carolus”).",
+        "sites": []
+      },
+      {
+        "name": "South Dakota",
+        "abbr": "SD",
+        "lat": 44.4,
+        "lng": -100.2,
+        "admitted": "11/02/1889",
+        "order": "40th state",
+        "origin": "From the Dakota (Sioux) people — “friend/ally.”",
+        "sites": []
+      },
+      {
+        "name": "Tennessee",
+        "abbr": "TN",
+        "lat": 35.9,
+        "lng": -86.4,
+        "admitted": "06/01/1796",
+        "order": "16th state",
+        "origin": "From the Cherokee town name “Tanasi.”",
+        "sites": []
+      },
+      {
+        "name": "Texas",
+        "abbr": "TX",
+        "lat": 31.5,
+        "lng": -99.3,
+        "admitted": "12/29/1845",
+        "order": "28th state",
+        "origin": "From Caddo “táysha” — “friends/allies.”",
+        "sites": [
+          {
+            "name": "The Alamo",
+            "est": "Mission 1718; battle 1836",
+            "lat": 29.426,
+            "lng": -98.4861,
+            "fact": "A former Spanish mission in San Antonio. Its 1836 siege — and the cry “Remember the Alamo!” — became the rallying point of the Texas Revolution."
+          },
+          {
+            "name": "San Jacinto Monument",
+            "est": "Battle 1836",
+            "lat": 29.7492,
+            "lng": -95.0808,
+            "fact": "Marks where Texas won its independence in an 18-minute battle. At 567 feet, the column is topped by a Lone Star and stands taller than the Washington Monument."
+          }
+        ]
+      },
+      {
+        "name": "Utah",
+        "abbr": "UT",
+        "lat": 39.3,
+        "lng": -111.7,
+        "admitted": "01/04/1896",
+        "order": "45th state",
+        "origin": "From the Ute people.",
+        "sites": []
+      },
+      {
+        "name": "Vermont",
+        "abbr": "VT",
+        "lat": 44.1,
+        "lng": -72.7,
+        "admitted": "03/04/1791",
+        "order": "14th state",
+        "origin": "From French “vert mont” — “green mountain.”",
+        "sites": []
+      },
+      {
+        "name": "Virginia",
+        "abbr": "VA",
+        "lat": 37.5,
+        "lng": -78.8,
+        "admitted": "06/25/1788",
+        "order": "10th state",
+        "origin": "For Elizabeth I, England’s “Virgin Queen.”",
+        "sites": []
+      },
+      {
+        "name": "Washington",
+        "abbr": "WA",
+        "lat": 47.4,
+        "lng": -120.5,
+        "admitted": "11/11/1889",
+        "order": "42nd state",
+        "origin": "For George Washington — the only U.S. state named after a president.",
+        "sites": []
+      },
+      {
+        "name": "West Virginia",
+        "abbr": "WV",
+        "lat": 38.6,
+        "lng": -80.6,
+        "admitted": "06/20/1863",
+        "order": "35th state",
+        "origin": "Split from Virginia during the Civil War; keeps the Virginia name.",
+        "sites": []
+      },
+      {
+        "name": "Wisconsin",
+        "abbr": "WI",
+        "lat": 44.6,
+        "lng": -89.9,
+        "admitted": "05/29/1848",
+        "order": "30th state",
+        "origin": "A French rendering of a Miami/Ojibwe river name; exact meaning uncertain.",
+        "sites": []
+      },
+      {
+        "name": "Wyoming",
+        "abbr": "WY",
+        "lat": 43,
+        "lng": -107.5,
+        "admitted": "07/10/1890",
+        "order": "44th state",
+        "origin": "From a Delaware (Lenape) word for “large prairie place,” via Pennsylvania’s Wyoming Valley.",
+        "sites": []
+      },
+      {
+        "name": "Washington, D.C.",
+        "abbr": "DC",
+        "lat": 38.9,
+        "lng": -77.03,
+        "admitted": "07/16/1790",
+        "order": "Federal district (not a state)",
+        "origin": "“Columbia” honors Christopher Columbus; the District was established by the Residence Act of 1790.",
+        "sites": [
+          {
+            "name": "Lincoln Memorial",
+            "est": "Dedicated 1922",
+            "lat": 38.8893,
+            "lng": -77.0502,
+            "fact": "Its 19-foot marble Lincoln faces the Mall. On its steps in 1963, Martin Luther King Jr. delivered the “I Have a Dream” speech."
+          },
+          {
+            "name": "Washington Monument",
+            "est": "Completed 1884",
+            "lat": 38.8895,
+            "lng": -77.0353,
+            "fact": "A 555-foot marble obelisk. A funding gap mid-build left a visible color change in the stone about a third of the way up."
+          },
+          {
+            "name": "U.S. Capitol",
+            "est": "Cornerstone 1793",
+            "lat": 38.8899,
+            "lng": -77.0091,
+            "fact": "Home of Congress. Its cast-iron dome was completed during the Civil War — Lincoln insisted work continue as a sign the Union would endure."
+          },
+          {
+            "name": "The White House",
+            "est": "Completed 1800",
+            "lat": 38.8977,
+            "lng": -77.0365,
+            "fact": "Every president except George Washington has lived here. British troops burned it in 1814; it was rebuilt and reoccupied by 1817."
+          }
+        ]
+      }
+    ]
+  }
+}
