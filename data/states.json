@@ -7,7 +7,17 @@
     "admitted": "12/14/1819",
     "order": "22nd state",
     "origin": "From the Alabama (Alibamu) people; often glossed from Choctaw as “thicket clearers.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Birmingham",
+        "lat": 33.5207,
+        "lng": -86.8025,
+        "founded": "1871",
+        "origin": "Named for Birmingham, England, an ironworking center its founders hoped to rival.",
+        "fact": "Nicknamed the 'Magic City' for how fast it grew once local iron ore, coal, and limestone let it become the South's great steel town."
+      }
+    ]
   },
   {
     "name": "Alaska",
@@ -17,7 +27,17 @@
     "admitted": "01/03/1959",
     "order": "49th state",
     "origin": "From Aleut/Unangan “Alaxsxaq” — roughly “the mainland.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Anchorage",
+        "lat": 61.2181,
+        "lng": -149.9003,
+        "founded": "1914",
+        "origin": "Named for the ship anchorage on Cook Inlet used during construction of the Alaska Railroad.",
+        "fact": "Started as a tent camp for railroad workers and is now home to nearly 40% of the entire state's population."
+      }
+    ]
   },
   {
     "name": "Arizona",
@@ -27,7 +47,17 @@
     "admitted": "02/14/1912",
     "order": "48th state",
     "origin": "Likely from O’odham “ali ṣonak” (small spring); a Basque origin is also proposed.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Phoenix",
+        "lat": 33.4484,
+        "lng": -112.074,
+        "founded": "1868",
+        "origin": "Named by \"Lord\" Darrell Duppa for the mythical bird, since the town rose atop the ruins of the ancient Hohokam civilization's canals.",
+        "fact": "Those 1,000-year-old Hohokam canals were re-dug by the city's founders and are still the basis of part of the Valley's canal system today."
+      }
+    ]
   },
   {
     "name": "Arkansas",
@@ -37,7 +67,17 @@
     "admitted": "06/15/1836",
     "order": "25th state",
     "origin": "A French rendering of a Sioux word for the Quapaw people.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Little Rock",
+        "lat": 34.7465,
+        "lng": -92.2896,
+        "founded": "1821",
+        "origin": "Named for \"la petite roche,\" a small rock outcrop French explorer Bernard de la Harpe used as a river landmark in 1722.",
+        "fact": "That original little rock is still visible today, near the base of the Junction Bridge on the Arkansas River."
+      }
+    ]
   },
   {
     "name": "California",
@@ -69,6 +109,16 @@
         "lng": -119.5383,
         "fact": "Lincoln signed the Yosemite Grant during the Civil War — the first time the U.S. set aside land specifically for preservation, seeding the national-park idea."
       }
+    ],
+    "cities": [
+      {
+        "name": "Los Angeles",
+        "lat": 34.0522,
+        "lng": -118.2437,
+        "founded": "1781",
+        "origin": "Founded by Spanish settlers as 'El Pueblo de Nuestra Señora la Reina de los Ángeles' — 'the Town of Our Lady, Queen of the Angels.'",
+        "fact": "Its original 44 settlers were a small, ethnically mixed group of Spanish, Indigenous, and African ancestry recruited from Mexico."
+      }
     ]
   },
   {
@@ -79,7 +129,17 @@
     "admitted": "08/01/1876",
     "order": "38th state",
     "origin": "Spanish for “colored/reddish,” after the silt-laden Colorado River.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Denver",
+        "lat": 39.7392,
+        "lng": -104.9903,
+        "founded": "1858",
+        "origin": "Named for Gen. James W. Denver, governor of Kansas Territory, by founders currying favor — he had actually already resigned before they arrived.",
+        "fact": "Its official elevation of 5,280 feet earns it the nickname 'the Mile High City'; a step on the State Capitol steps marks the exact spot."
+      }
+    ]
   },
   {
     "name": "Connecticut",
@@ -89,7 +149,17 @@
     "admitted": "01/09/1788",
     "order": "5th state",
     "origin": "From Mohegan-Pequot “quinnitukqut” — “at the long tidal river.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Hartford",
+        "lat": 41.7658,
+        "lng": -72.6734,
+        "founded": "1635",
+        "origin": "Named after Hertford, England, the hometown of an early settler.",
+        "fact": "Home to the oldest publicly funded park in America (Bushnell Park, 1854) and the insurance industry that gave it the nickname 'the Insurance Capital of the World.'"
+      }
+    ]
   },
   {
     "name": "Delaware",
@@ -99,7 +169,17 @@
     "admitted": "12/07/1787",
     "order": "1st state",
     "origin": "For Lord De La Warr (Thomas West), an early governor of Virginia.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Wilmington",
+        "lat": 39.7391,
+        "lng": -75.5398,
+        "founded": "1739",
+        "origin": "Named for Spencer Compton, Earl of Wilmington, when it received its borough charter.",
+        "fact": "Swedish colonists had already settled the site in 1638 as Fort Christina — one of the very first European settlements in the Delaware Valley."
+      }
+    ]
   },
   {
     "name": "Florida",
@@ -131,6 +211,16 @@
         "lng": -81.3145,
         "fact": "The oldest continuously occupied European-established settlement in the continental U.S. — predating Jamestown by 42 years."
       }
+    ],
+    "cities": [
+      {
+        "name": "Miami",
+        "lat": 25.7617,
+        "lng": -80.1918,
+        "founded": "1896",
+        "origin": "From the Mayaimi people and Lake Mayaimi (now Lake Okeechobee), a name often glossed 'big water.'",
+        "fact": "Julia Tuttle, the only woman to found a major American city, convinced Henry Flagler to extend his railroad here after a hard 1894 freeze spared Miami's citrus."
+      }
     ]
   },
   {
@@ -141,7 +231,17 @@
     "admitted": "01/02/1788",
     "order": "4th state",
     "origin": "Named for King George II of Great Britain.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Atlanta",
+        "lat": 33.749,
+        "lng": -84.388,
+        "founded": "1837",
+        "origin": "Began as 'Terminus,' the end of the line for the Western & Atlantic Railroad; the name Atlanta is a feminine form of 'Atlantic,' honoring that railroad.",
+        "fact": "It was burned during Sherman's 1864 March to the Sea and rebuilt so fast its later motto became 'Resurgens' — Latin for 'rising again.'"
+      }
+    ]
   },
   {
     "name": "Hawaii",
@@ -151,7 +251,17 @@
     "admitted": "08/21/1959",
     "order": "50th state",
     "origin": "Possibly from “Hawaiki,” the legendary Polynesian homeland.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Honolulu",
+        "lat": 21.3069,
+        "lng": -157.8583,
+        "founded": "1794",
+        "origin": "A Hawaiian name meaning 'sheltered bay' or 'calm port,' describing its harbor.",
+        "fact": "Became the capital of the Kingdom of Hawai'i under Kamehameha III in 1845, decades before statehood."
+      }
+    ]
   },
   {
     "name": "Idaho",
@@ -161,7 +271,17 @@
     "admitted": "07/03/1890",
     "order": "43rd state",
     "origin": "A coined word once claimed to be Shoshone; its true origin is disputed.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Boise",
+        "lat": 43.615,
+        "lng": -116.2023,
+        "founded": "1863",
+        "origin": "From French-Canadian trappers' 'les bois' — 'the woods' — the trees along the river stood out amid otherwise dry, treeless plains.",
+        "fact": "Founded as a U.S. Army post to supply Oregon Trail travelers and nearby gold-rush miners."
+      }
+    ]
   },
   {
     "name": "Illinois",
@@ -171,7 +291,17 @@
     "admitted": "12/03/1818",
     "order": "21st state",
     "origin": "French rendering of the name of the Illinois (Illini) confederation.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Chicago",
+        "lat": 41.8781,
+        "lng": -87.6298,
+        "founded": "1833",
+        "origin": "From the Miami-Illinois word 'shikaakwa,' referring to the wild garlic/onion that once grew along the riverbanks.",
+        "fact": "Rebuilt almost entirely after the Great Fire of 1871, it pioneered the modern skyscraper only a decade later."
+      }
+    ]
   },
   {
     "name": "Indiana",
@@ -181,7 +311,17 @@
     "admitted": "12/11/1816",
     "order": "19th state",
     "origin": "Latin-style coinage meaning “Land of the Indians.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Indianapolis",
+        "lat": 39.7684,
+        "lng": -86.1581,
+        "founded": "1821",
+        "origin": "A coined name meaning 'city of Indiana,' combining the state name with the Greek 'polis' (city).",
+        "fact": "It was deliberately platted from scratch as a new, centrally located state capital — there was no earlier town on the site."
+      }
+    ]
   },
   {
     "name": "Iowa",
@@ -191,7 +331,17 @@
     "admitted": "12/28/1846",
     "order": "29th state",
     "origin": "From the Ioway (Iowa) people.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Des Moines",
+        "lat": 41.5868,
+        "lng": -93.625,
+        "founded": "1843",
+        "origin": "Likely a French rendering of a Native word for the river (possibly 'Moingona'), later folk-etymologized as French for 'of the monks.'",
+        "fact": "Began as Fort Des Moines, a U.S. Army fort built at the junction of the Des Moines and Raccoon Rivers."
+      }
+    ]
   },
   {
     "name": "Kansas",
@@ -201,7 +351,17 @@
     "admitted": "01/29/1861",
     "order": "34th state",
     "origin": "From the Kansa (Kaw) people — “people of the south wind.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Wichita",
+        "lat": 37.6872,
+        "lng": -97.3301,
+        "founded": "1868",
+        "origin": "Named for the Wichita people, who had villages in the area before American settlement.",
+        "fact": "Grew from a trading post on the Chisholm Trail into the self-proclaimed 'Air Capital of the World' for its aircraft manufacturing."
+      }
+    ]
   },
   {
     "name": "Kentucky",
@@ -211,7 +371,17 @@
     "admitted": "06/01/1792",
     "order": "15th state",
     "origin": "From an Iroquoian word, often glossed “meadow land” or “land of tomorrow.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Louisville",
+        "lat": 38.2527,
+        "lng": -85.7585,
+        "founded": "1778",
+        "origin": "Named for King Louis XVI of France, in gratitude for French support during the American Revolution.",
+        "fact": "Founded by George Rogers Clark on Corn Island in the Ohio River, right above the river's only natural falls."
+      }
+    ]
   },
   {
     "name": "Louisiana",
@@ -221,7 +391,17 @@
     "admitted": "04/30/1812",
     "order": "18th state",
     "origin": "Named for King Louis XIV of France.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "New Orleans",
+        "lat": 29.9511,
+        "lng": -90.0715,
+        "founded": "1718",
+        "origin": "Named for Philippe II, Duke of Orléans, who was regent of France when the city was founded.",
+        "fact": "Built on a crescent bend of the Mississippi, which is why its oldest neighborhoods are still called 'the Crescent City.'"
+      }
+    ]
   },
   {
     "name": "Maine",
@@ -231,7 +411,17 @@
     "admitted": "03/15/1820",
     "order": "23rd state",
     "origin": "Likely the nautical “mainland,” or the French province of Maine.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Portland",
+        "lat": 43.6591,
+        "lng": -70.2568,
+        "founded": "1786",
+        "origin": "Renamed from 'Falmouth Neck' after the Isle of Portland on the English coast.",
+        "fact": "Burned to the ground four times — including by the British in 1775 and the Great Fire of 1866 — and rebuilt each time."
+      }
+    ]
   },
   {
     "name": "Maryland",
@@ -241,7 +431,17 @@
     "admitted": "04/28/1788",
     "order": "7th state",
     "origin": "For Queen Henrietta Maria, wife of King Charles I.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Baltimore",
+        "lat": 39.2904,
+        "lng": -76.6122,
+        "founded": "1729",
+        "origin": "Named for the Barons Baltimore, the Calvert family who held Maryland's founding proprietorship.",
+        "fact": "Its Fort McHenry survived a British bombardment in 1814 that inspired Francis Scott Key to write 'The Star-Spangled Banner.'"
+      }
+    ]
   },
   {
     "name": "Massachusetts",
@@ -273,6 +473,16 @@
         "lng": -71.0562,
         "fact": "“Old Ironsides” — the world’s oldest commissioned warship still afloat. British shot seemed to bounce off her oak hull in the War of 1812."
       }
+    ],
+    "cities": [
+      {
+        "name": "Boston",
+        "lat": 42.3601,
+        "lng": -71.0589,
+        "founded": "1630",
+        "origin": "Named after Boston, Lincolnshire, England, hometown of many Puritan settlers.",
+        "fact": "Founded by the Puritan Massachusetts Bay Colony as their new 'city upon a hill.'"
+      }
     ]
   },
   {
@@ -283,7 +493,17 @@
     "admitted": "01/26/1837",
     "order": "26th state",
     "origin": "From Ojibwe “mishigami” — “large water” (the Great Lakes).",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Detroit",
+        "lat": 42.3314,
+        "lng": -83.0458,
+        "founded": "1701",
+        "origin": "French for 'strait,' after the narrow Detroit River connecting Lake St. Clair and Lake Erie, where Antoine de la Mothe Cadillac built his fort.",
+        "fact": "Became 'Motor City' in the early 1900s once Ford, Olds, and the Dodge brothers all built car factories along that same river."
+      }
+    ]
   },
   {
     "name": "Minnesota",
@@ -293,7 +513,17 @@
     "admitted": "05/11/1858",
     "order": "32nd state",
     "origin": "From Dakota “mni sota” — “cloudy” or “sky-tinted” water.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Minneapolis",
+        "lat": 44.9778,
+        "lng": -93.265,
+        "founded": "1867",
+        "origin": "Blends Dakota 'mni' (water) with the Greek 'polis' (city) — a nod to nearby Saint Anthony Falls.",
+        "fact": "Its milling district around those falls once made it the flour-milling capital of the world, powering brands like Pillsbury and General Mills."
+      }
+    ]
   },
   {
     "name": "Mississippi",
@@ -303,7 +533,17 @@
     "admitted": "12/10/1817",
     "order": "20th state",
     "origin": "From Ojibwe “misi-ziibi” — “great river.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Jackson",
+        "lat": 32.2988,
+        "lng": -90.1848,
+        "founded": "1821",
+        "origin": "Named for Andrew Jackson, hero of the Battle of New Orleans, before he became president.",
+        "fact": "Chosen as capital largely for its central location and site on the Pearl River, replacing Natchez."
+      }
+    ]
   },
   {
     "name": "Missouri",
@@ -313,7 +553,17 @@
     "admitted": "08/10/1821",
     "order": "24th state",
     "origin": "From the Missouria people — “people of the big canoes.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Kansas City",
+        "lat": 39.0997,
+        "lng": -94.5786,
+        "founded": "1838",
+        "origin": "Named, like the state of Kansas, for the Kansa (Kaw) people, whose name is often glossed 'people of the south wind.'",
+        "fact": "Sits at the confluence of the Missouri and Kansas Rivers and is famous for more fountains than any city besides Rome."
+      }
+    ]
   },
   {
     "name": "Montana",
@@ -323,7 +573,17 @@
     "admitted": "11/08/1889",
     "order": "41st state",
     "origin": "From Spanish/Latin “montaña” — “mountain.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Billings",
+        "lat": 45.7833,
+        "lng": -108.5007,
+        "founded": "1882",
+        "origin": "Named for Frederick H. Billings, president of the Northern Pacific Railroad, whose line reached the site that year.",
+        "fact": "Grew so fast after the railroad arrived that it earned the nickname 'the Magic City.'"
+      }
+    ]
   },
   {
     "name": "Nebraska",
@@ -333,7 +593,17 @@
     "admitted": "03/01/1867",
     "order": "37th state",
     "origin": "From Otoe/Omaha “ñí brásge” — “flat water” (the Platte River).",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Omaha",
+        "lat": 41.2565,
+        "lng": -95.9345,
+        "founded": "1854",
+        "origin": "Named for the Omaha people, whose own name is often translated 'those going against the current' or 'upstream people.'",
+        "fact": "Its Union Pacific headquarters made it the eastern starting point of the First Transcontinental Railroad in 1863."
+      }
+    ]
   },
   {
     "name": "Nevada",
@@ -343,7 +613,17 @@
     "admitted": "10/31/1864",
     "order": "36th state",
     "origin": "Spanish “nevada” — “snow-covered,” from the Sierra Nevada.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Las Vegas",
+        "lat": 36.1699,
+        "lng": -115.1398,
+        "founded": "1905",
+        "origin": "Spanish for 'the meadows,' after natural artesian springs that once made the site a green oasis in the desert.",
+        "fact": "Its founding date marks a railroad land auction; Hoover Dam construction in the 1930s is what later brought its population boom."
+      }
+    ]
   },
   {
     "name": "New Hampshire",
@@ -353,7 +633,17 @@
     "admitted": "06/21/1788",
     "order": "9th state",
     "origin": "Named for the English county of Hampshire.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Manchester",
+        "lat": 42.9956,
+        "lng": -71.4548,
+        "founded": "1810",
+        "origin": "Renamed from Derryfield after Manchester, England, in hopes of rivaling that city's textile-mill industry.",
+        "fact": "The Amoskeag Manufacturing Company built along the Merrimack River here became, for a time, the largest cotton-textile plant on Earth."
+      }
+    ]
   },
   {
     "name": "New Jersey",
@@ -363,7 +653,17 @@
     "admitted": "12/18/1787",
     "order": "3rd state",
     "origin": "Named for the Channel Island of Jersey.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Newark",
+        "lat": 40.7357,
+        "lng": -74.1724,
+        "founded": "1666",
+        "origin": "Likely named for Newark-on-Trent, England, the hometown of a founding Puritan minister.",
+        "fact": "Founded by Connecticut Puritans led by Robert Treat seeking a stricter religious community than Connecticut allowed."
+      }
+    ]
   },
   {
     "name": "New Mexico",
@@ -373,7 +673,17 @@
     "admitted": "01/06/1912",
     "order": "47th state",
     "origin": "Spanish “Nuevo México,” used long before the modern country of Mexico existed.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Albuquerque",
+        "lat": 35.0844,
+        "lng": -106.6504,
+        "founded": "1706",
+        "origin": "Named for the Duke of Alburquerque, viceroy of New Spain, though the first 'r' later dropped from spelling.",
+        "fact": "Founded as a Spanish colonial villa along the Rio Grande and the Camino Real trade route to Mexico City."
+      }
+    ]
   },
   {
     "name": "New York",
@@ -412,6 +722,16 @@
         "lng": -79.0648,
         "fact": "The oldest state park in the United States, laid out by Frederick Law Olmsted — the landscape architect behind Central Park."
       }
+    ],
+    "cities": [
+      {
+        "name": "New York City",
+        "lat": 40.7128,
+        "lng": -74.006,
+        "founded": "1624",
+        "origin": "Founded by the Dutch as New Amsterdam; renamed New York in 1664 for the Duke of York after the English seized it.",
+        "fact": "Its Dutch roots still show in names like Brooklyn (Breukelen), Harlem (Haarlem), and Wall Street (built along a defensive wall)."
+      }
     ]
   },
   {
@@ -422,7 +742,17 @@
     "admitted": "11/21/1789",
     "order": "12th state",
     "origin": "For King Charles I (Latin “Carolus”).",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Charlotte",
+        "lat": 35.2271,
+        "lng": -80.8431,
+        "founded": "1768",
+        "origin": "Named for Queen Charlotte of Mecklenburg-Strelitz, wife of Britain's King George III.",
+        "fact": "Ironically became a hotbed of Revolutionary sentiment so fierce that Lord Cornwallis called it 'a hornet's nest of rebellion.'"
+      }
+    ]
   },
   {
     "name": "North Dakota",
@@ -432,7 +762,17 @@
     "admitted": "11/02/1889",
     "order": "39th state",
     "origin": "From the Dakota (Sioux) people — “friend/ally.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Fargo",
+        "lat": 46.8772,
+        "lng": -96.7898,
+        "founded": "1871",
+        "origin": "Named for William Fargo, co-founder of Wells, Fargo & Co. and a director of the Northern Pacific Railroad.",
+        "fact": "Began as a rough railhead camp nicknamed 'Fargo in the Timber' before the Northern Pacific bridged the Red River there."
+      }
+    ]
   },
   {
     "name": "Ohio",
@@ -442,7 +782,17 @@
     "admitted": "03/01/1803",
     "order": "17th state",
     "origin": "From Seneca “ohi:yo’” — “great river.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Columbus",
+        "lat": 39.9612,
+        "lng": -82.9988,
+        "founded": "1812",
+        "origin": "Named for Christopher Columbus when the Ohio legislature chose the site as a brand-new, centrally located capital.",
+        "fact": "Like Indianapolis, it was platted on forest land with no prior town — built specifically to be the capital."
+      }
+    ]
   },
   {
     "name": "Oklahoma",
@@ -452,7 +802,17 @@
     "admitted": "11/16/1907",
     "order": "46th state",
     "origin": "From Choctaw “okla humma” — “red people.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Oklahoma City",
+        "lat": 35.4676,
+        "lng": -97.5164,
+        "founded": "1889",
+        "origin": "Shares the state's name, from Choctaw 'okla humma' — 'red people.'",
+        "fact": "Went from empty prairie to a tent city of roughly 10,000 people in a single afternoon during the Land Run of April 22, 1889."
+      }
+    ]
   },
   {
     "name": "Oregon",
@@ -462,7 +822,17 @@
     "admitted": "02/14/1859",
     "order": "33rd state",
     "origin": "Origin genuinely uncertain; several competing theories exist.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Portland",
+        "lat": 45.5152,
+        "lng": -122.6784,
+        "founded": "1845",
+        "origin": "Chosen by a coin flip between founders Asa Lovejoy (who wanted 'Boston') and Francis Pettygrove (who wanted 'Portland,' after his Maine hometown).",
+        "fact": "That 1845 coin — the 'Portland Penny' — still survives and is on display at the Oregon Historical Society."
+      }
+    ]
   },
   {
     "name": "Pennsylvania",
@@ -494,6 +864,16 @@
         "lng": -77.2253,
         "fact": "Site of the Civil War’s bloodiest battle and, months later, Lincoln’s 272-word Gettysburg Address."
       }
+    ],
+    "cities": [
+      {
+        "name": "Philadelphia",
+        "lat": 39.9526,
+        "lng": -75.1652,
+        "founded": "1682",
+        "origin": "Coined by William Penn from Greek 'philos' (love) + 'adelphos' (brother) — 'the City of Brotherly Love.'",
+        "fact": "Penn personally laid out its original grid plan, one of the first planned cities in the American colonies."
+      }
     ]
   },
   {
@@ -504,7 +884,17 @@
     "admitted": "05/29/1790",
     "order": "13th state",
     "origin": "Possibly for Aquidneck’s likeness to Rhodes, or Dutch “Roodt Eylandt” (red island).",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Providence",
+        "lat": 41.824,
+        "lng": -71.4128,
+        "founded": "1636",
+        "origin": "Named by founder Roger Williams in gratitude for what he called 'God's merciful Providence' after his banishment from Massachusetts.",
+        "fact": "Williams founded it explicitly on principles of religious liberty, a radical idea for New England in the 1630s."
+      }
+    ]
   },
   {
     "name": "South Carolina",
@@ -514,7 +904,17 @@
     "admitted": "05/23/1788",
     "order": "8th state",
     "origin": "For King Charles I (Latin “Carolus”).",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Charleston",
+        "lat": 32.7765,
+        "lng": -79.9311,
+        "founded": "1670",
+        "origin": "Originally 'Charles Town,' named for England's King Charles II.",
+        "fact": "Its harbor forts, including Fort Sumter, saw the opening shots of the Civil War in April 1861."
+      }
+    ]
   },
   {
     "name": "South Dakota",
@@ -524,7 +924,17 @@
     "admitted": "11/02/1889",
     "order": "40th state",
     "origin": "From the Dakota (Sioux) people — “friend/ally.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Sioux Falls",
+        "lat": 43.546,
+        "lng": -96.7313,
+        "founded": "1856",
+        "origin": "Named for the waterfalls on the Big Sioux River and the Sioux (Dakota/Lakota) people.",
+        "fact": "Those falls, now the centerpiece of Falls Park, once powered the city's early quartzite-milling industry."
+      }
+    ]
   },
   {
     "name": "Tennessee",
@@ -534,7 +944,17 @@
     "admitted": "06/01/1796",
     "order": "16th state",
     "origin": "From the Cherokee town name “Tanasi.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Nashville",
+        "lat": 36.1627,
+        "lng": -86.7816,
+        "founded": "1779",
+        "origin": "Named for Francis Nash, a Revolutionary War general killed in the 1777 Battle of Germantown.",
+        "fact": "Began as Fort Nashborough, a river-bluff stockade built by James Robertson and John Donelson's parties."
+      }
+    ]
   },
   {
     "name": "Texas",
@@ -559,6 +979,16 @@
         "lng": -95.0808,
         "fact": "Marks where Texas won its independence in an 18-minute battle. At 567 feet, the column is topped by a Lone Star and stands taller than the Washington Monument."
       }
+    ],
+    "cities": [
+      {
+        "name": "Houston",
+        "lat": 29.7604,
+        "lng": -95.3698,
+        "founded": "1836",
+        "origin": "Named for Sam Houston, hero of the Battle of San Jacinto and first president of the Republic of Texas.",
+        "fact": "Founded by land-speculating Allen brothers just weeks after San Jacinto, betting the new republic would need a capital-sized city."
+      }
     ]
   },
   {
@@ -569,7 +999,17 @@
     "admitted": "01/04/1896",
     "order": "45th state",
     "origin": "From the Ute people.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Salt Lake City",
+        "lat": 40.7608,
+        "lng": -111.891,
+        "founded": "1847",
+        "origin": "Named for the adjacent Great Salt Lake.",
+        "fact": "Founded by Brigham Young's Mormon pioneers within days of reaching the valley, fleeing religious persecution in Illinois."
+      }
+    ]
   },
   {
     "name": "Vermont",
@@ -579,7 +1019,17 @@
     "admitted": "03/04/1791",
     "order": "14th state",
     "origin": "From French “vert mont” — “green mountain.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Burlington",
+        "lat": 44.4759,
+        "lng": -73.2121,
+        "founded": "1763",
+        "origin": "Possibly honors the Burling family, prominent New York investors in the original Vermont land grants.",
+        "fact": "Its lakefront on Lake Champlain made it Vermont's busiest 19th-century port for lumber and grain."
+      }
+    ]
   },
   {
     "name": "Virginia",
@@ -589,7 +1039,17 @@
     "admitted": "06/25/1788",
     "order": "10th state",
     "origin": "For Elizabeth I, England’s “Virgin Queen.”",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Richmond",
+        "lat": 37.5407,
+        "lng": -77.436,
+        "founded": "1737",
+        "origin": "Named by founder William Byrd II after Richmond upon Thames, England, whose river view reminded him of the James River here.",
+        "fact": "Served as the capital of the Confederacy from 1861 until it fell to Union troops in April 1865."
+      }
+    ]
   },
   {
     "name": "Washington",
@@ -599,7 +1059,17 @@
     "admitted": "11/11/1889",
     "order": "42nd state",
     "origin": "For George Washington — the only U.S. state named after a president.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Seattle",
+        "lat": 47.6062,
+        "lng": -122.3321,
+        "founded": "1851",
+        "origin": "Named for Chief Si'ahl (anglicized 'Seattle') of the Duwamish and Suquamish peoples.",
+        "fact": "Rebuilt in brick and stone after the Great Seattle Fire of 1889 destroyed nearly its entire downtown core."
+      }
+    ]
   },
   {
     "name": "West Virginia",
@@ -609,7 +1079,17 @@
     "admitted": "06/20/1863",
     "order": "35th state",
     "origin": "Split from Virginia during the Civil War; keeps the Virginia name.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Charleston",
+        "lat": 38.3498,
+        "lng": -81.6326,
+        "founded": "1794",
+        "origin": "Named for Charles Clendenin, father of city founder George Clendenin.",
+        "fact": "Became the capital of the new state of West Virginia in 1863, after the western counties split from Confederate Virginia."
+      }
+    ]
   },
   {
     "name": "Wisconsin",
@@ -619,7 +1099,17 @@
     "admitted": "05/29/1848",
     "order": "30th state",
     "origin": "A French rendering of a Miami/Ojibwe river name; exact meaning uncertain.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Milwaukee",
+        "lat": 43.0389,
+        "lng": -87.9065,
+        "founded": "1846",
+        "origin": "From an Algonquian word often glossed 'good land' or 'gathering place by the water.'",
+        "fact": "Formed by merging three rival townships and went on to become a beer-brewing capital thanks to its many German immigrant settlers."
+      }
+    ]
   },
   {
     "name": "Wyoming",
@@ -629,7 +1119,17 @@
     "admitted": "07/10/1890",
     "order": "44th state",
     "origin": "From a Delaware (Lenape) word for “large prairie place,” via Pennsylvania’s Wyoming Valley.",
-    "sites": []
+    "sites": [],
+    "cities": [
+      {
+        "name": "Cheyenne",
+        "lat": 41.14,
+        "lng": -104.8202,
+        "founded": "1867",
+        "origin": "Named for the Cheyenne Nation.",
+        "fact": "Sprang up almost overnight as a Union Pacific Railroad camp, earning the nickname 'Magic City of the Plains.'"
+      }
+    ]
   },
   {
     "name": "Washington, D.C.",
@@ -667,6 +1167,16 @@
         "lat": 38.8977,
         "lng": -77.0365,
         "fact": "Every president except George Washington has lived here. British troops burned it in 1814; it was rebuilt and reoccupied by 1817."
+      }
+    ],
+    "cities": [
+      {
+        "name": "Georgetown",
+        "lat": 38.9097,
+        "lng": -77.0654,
+        "founded": "1751",
+        "origin": "Chartered by the Maryland colonial legislature and named for King George II.",
+        "fact": "Already a busy tobacco port decades before the federal district existed — it was folded into Washington in 1871."
       }
     ]
   }
