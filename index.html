@@ -29,12 +29,26 @@
     background:radial-gradient(120% 90% at 40% 45%,transparent 55%,rgba(3,6,9,.55) 100%);}
 
   /* ---- wordmark ---------------------------------------------------- */
-  .brand{position:absolute;top:18px;left:20px;z-index:1000;pointer-events:none;}
+  /* A translucent badge (like the basemap toggle) keeps it legible over any
+     imagery; three zoom-tied variants (full/mid/compact) keep it from
+     dominating the screen once you've zoomed into a state or a site. */
+  .brand{position:absolute;top:18px;left:20px;z-index:1000;pointer-events:none;
+    background:rgba(11,16,19,.72);border:1px solid var(--line);border-radius:10px;
+    padding:10px 16px;backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,.4);
+    transition:padding .25s ease;}
   .brand h1{font-family:'Fraunces',serif;font-weight:900;font-size:30px;letter-spacing:.5px;
-    margin:0;line-height:1;color:var(--parch);text-shadow:0 2px 16px rgba(0,0,0,.85);}
+    margin:0;line-height:1;color:var(--parch);text-shadow:0 2px 16px rgba(0,0,0,.85);
+    transition:font-size .25s ease;}
   .brand h1 span{color:var(--brass);}
   .brand p{margin:5px 0 0;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.5px;
-    text-transform:uppercase;color:var(--mute);text-shadow:0 1px 10px rgba(0,0,0,.95);}
+    text-transform:uppercase;color:var(--mute);text-shadow:0 1px 10px rgba(0,0,0,.95);
+    max-height:20px;opacity:1;overflow:hidden;
+    transition:max-height .25s ease,opacity .2s ease,margin .25s ease;}
+  .brand.zoom-mid h1{font-size:23px;}
+  .brand.zoom-mid p{max-height:0;opacity:0;margin-top:0;}
+  .brand.zoom-near{padding:7px 12px;}
+  .brand.zoom-near h1{font-size:17px;}
+  .brand.zoom-near p{max-height:0;opacity:0;margin-top:0;}
 
   /* ---- basemap toggle --------------------------------------------- */
   .basemap{position:absolute;bottom:22px;left:20px;z-index:1000;display:flex;
@@ -62,6 +76,23 @@
     backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,.4);transition:border-color .15s,transform .05s;}
   .search-fab:hover{border-color:var(--brass-d);}
   .search-fab:active{transform:scale(.95);}
+
+  /* ---- persistent top-level search: always visible, no need to open the
+     sidebar first to find a state, city, or town ---------------------- */
+  .map-search{position:absolute;top:18px;left:50%;transform:translateX(-50%);
+    z-index:1000;width:360px;max-width:calc(100vw - 200px);}
+  .map-search-ico{position:absolute;left:14px;top:13px;color:var(--mute);pointer-events:none;}
+  .map-search input{width:100%;background:rgba(11,16,19,.82);border:1px solid var(--line);
+    border-radius:10px;color:var(--parch);font-family:'Inter',sans-serif;font-size:14px;
+    padding:11px 14px 11px 38px;outline:none;backdrop-filter:blur(8px);
+    box-shadow:0 6px 20px rgba(0,0,0,.4);transition:border-color .15s;}
+  .map-search input:focus{border-color:var(--brass-d);}
+  .map-search input::placeholder{color:#5f7079;}
+  .map-search-results{margin-top:6px;background:rgba(11,16,19,.94);border:1px solid var(--line);
+    border-radius:10px;backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.5);
+    max-height:340px;overflow-y:auto;display:none;padding:6px;}
+  .map-search-results.open{display:block;}
+  .map-search-results .empty{padding:14px 12px;font-size:12.5px;}
   .panel-head{padding:22px 22px 16px;border-bottom:1px solid var(--line);}
   .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.5px;
     text-transform:uppercase;color:var(--brass);margin-bottom:9px;display:block;}
@@ -186,6 +217,14 @@
   .pin svg{display:block;}
   .pin:hover{transform:translateY(-2px) scale(1.08);}
 
+  /* ---- state name labels: no pin graphic, just legible text ------- */
+  .state-label{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;letter-spacing:.3px;
+    color:var(--parch);white-space:nowrap;cursor:pointer;user-select:none;
+    text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.9);
+    transition:color .15s,text-shadow .15s;}
+  .state-label:hover{color:var(--brass);}
+
   .leaflet-popup-content-wrapper{background:var(--ink2);color:var(--parch);
     border:1px solid var(--brass-d);border-radius:10px;}
   .leaflet-popup-tip{background:var(--ink2);border:1px solid var(--brass-d);}
@@ -201,6 +240,17 @@
   .leaflet-control-attribution{background:rgba(11,16,19,.7)!important;color:#6b7c85!important;}
   .leaflet-control-attribution a{color:#8a9ba5!important;}
 
+  /* ---- zoom control: bottom-right, horizontal, "+" on the right ---- */
+  /* DOM order is [zoom-in, zoom-out]; row-reverse flips the visual order so
+     zoom-out (−) lands on the left and zoom-in (+) lands on the right. */
+  .leaflet-control-zoom{display:flex!important;flex-direction:row-reverse;
+    border:1px solid var(--line)!important;border-radius:8px!important;overflow:hidden;
+    box-shadow:0 6px 20px rgba(0,0,0,.4);}
+  .leaflet-control-zoom a{border-radius:0!important;width:34px!important;height:34px!important;
+    line-height:34px!important;}
+  .leaflet-control-zoom-in{border-left:1px solid var(--line);}
+  .leaflet-bottom.leaflet-right{z-index:1001;margin-bottom:22px;margin-right:20px;}
+
   /* ---- responsive ------------------------------------------------- */
   @media (max-width:720px){
     :root{--panel-w:100%;}
@@ -211,6 +261,7 @@
     .brand h1{font-size:24px;} .brand{top:14px;left:16px;}
     .basemap{bottom:calc(56% + 14px);left:16px;}
     .search-fab{top:14px;right:16px;}
+    .map-search{top:66px;left:16px;right:16px;transform:none;width:auto;max-width:none;}
   }
 </style>
 </head>
@@ -231,6 +282,14 @@
   <button class="search-fab" id="search-fab" title="Open sidebar" aria-label="Open sidebar">
     <svg id="fab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
   </button>
+
+  <div class="map-search" id="map-search">
+    <span class="map-search-ico">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+    </span>
+    <input id="map-search-input" type="text" placeholder="Search a state, city, or town…" autocomplete="off">
+    <div id="map-search-results" class="map-search-results"></div>
+  </div>
 
   <aside class="panel"><div id="panel-content"></div></aside>
 
@@ -419,8 +478,19 @@ window.PINPOINT_STATES = [
    Modes inspired by WaveAtlas: Wander · Explore nearby · Search · Editorial Picks
    ================================================================ */
 const USA_VIEW = { center:[38.5,-96.5], zoom:4 };
-const map = L.map('map',{ zoomControl:true, minZoom:3, maxZoom:18, worldCopyJump:false, preferCanvas:true })
+const map = L.map('map',{ zoomControl:false, minZoom:3, maxZoom:18, worldCopyJump:false, preferCanvas:true })
   .setView(USA_VIEW.center, USA_VIEW.zoom);
+L.control.zoom({ position:'bottomright' }).addTo(map);
+
+/* logo variant tied to zoom level: full lockup far out, compact up close --- */
+const brandEl = document.querySelector('.brand');
+function updateBrandZoom(){
+  const z = map.getZoom();
+  brandEl.classList.toggle('zoom-mid', z>6 && z<=11);
+  brandEl.classList.toggle('zoom-near', z>11);
+}
+map.on('zoomend', updateBrandZoom);
+updateBrandZoom();
 
 /* basemaps ------------------------------------------------------- */
 // keepBuffer/updateWhenZooming: keep more offscreen tiles cached and skip
@@ -429,20 +499,28 @@ const TILE_OPTS = { updateWhenZooming:false, keepBuffer:4 };
 const satImagery = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   { attribution:'Imagery © Esri, Maxar, Earthstar Geographics', maxZoom:18, ...TILE_OPTS });
-const satLabels = L.tileLayer(
-  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-  { maxZoom:18, opacity:.9, ...TILE_OPTS });
 const nightLights = L.tileLayer(
   'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
   { attribution:'Earth at Night © NASA Earth Observatory', maxNativeZoom:8, maxZoom:18, ...TILE_OPTS });
 
-const satGroup = L.layerGroup([satImagery, satLabels]);
-satGroup.addTo(map);
+// Boundaries/place-name reference layer lives in its own pane, above BOTH base
+// imagery layers, and is never removed — previously it only rode along inside
+// the satellite layer group, so it vanished entirely in night mode, leaving no
+// state lines at all. Now state/country outlines stay visible in either mode.
+map.createPane('boundaryLabels');
+map.getPane('boundaryLabels').style.zIndex = 350;
+map.getPane('boundaryLabels').style.pointerEvents = 'none';
+const satLabels = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom:18, opacity:.9, pane:'boundaryLabels', ...TILE_OPTS });
+
+satImagery.addTo(map);
+satLabels.addTo(map);
 let currentBase = 'sat';
 function setBase(mode){
   if(mode===currentBase) return;
-  if(mode==='night'){ map.removeLayer(satGroup); nightLights.addTo(map); }
-  else { map.removeLayer(nightLights); satGroup.addTo(map); }
+  if(mode==='night'){ map.removeLayer(satImagery); nightLights.addTo(map); }
+  else { map.removeLayer(nightLights); satImagery.addTo(map); }
   currentBase = mode;
   document.getElementById('bm-sat').classList.toggle('on', mode==='sat');
   document.getElementById('bm-night').classList.toggle('on', mode==='night');
@@ -464,6 +542,8 @@ let stateLayer = L.layerGroup().addTo(map);
 let siteLayer  = L.layerGroup().addTo(map);
 let cityLayer  = L.layerGroup().addTo(map);
 let cityHighlight = L.layerGroup().addTo(map);
+let statePinLayer = L.layerGroup().addTo(map);
+let stateOutline  = L.layerGroup().addTo(map);
 let siteMarkers = {};
 let cityMarkers = {};
 let CURRENT_STATE = null;
@@ -494,14 +574,13 @@ const PICKS = [
 const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const byAbbr = a => STATES.find(s=>s.abbr===a);
 function siteIndex(st,name){ return (st.sites||[]).findIndex(s=>s.name===name); }
-function stateIcon(a){
-  return L.divIcon({ className:'', iconSize:[30,42], iconAnchor:[15,42], popupAnchor:[0,-30],
-    html:`<div class="pin"><svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-      <path d="M15 41.5 L12.4 20.5 H17.6 Z" fill="#cdd3da" stroke="#9aa2ab" stroke-width=".5"/>
-      <circle cx="15" cy="14" r="12.5" fill="#D9A441" stroke="#f0c96b" stroke-width="1.5"/>
-      <circle cx="10.6" cy="9.6" r="3.4" fill="#f4d489" opacity=".7"/>
-      <text x="15" y="17.6" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,monospace" font-weight="600" font-size="10" fill="#1a1206">${a}</text>
-    </svg></div>` });
+function stateLabelIcon(name, dx, dy){
+  // No pin graphic — just a legible, centered text label (Google-Earth-style
+  // place name). iconSize:[0,0] + the inner span's own centering transform
+  // lets it size to its text naturally instead of a fixed pin footprint.
+  // dx/dy (screen pixels) nudge labels apart in the crowded Northeast cluster.
+  return L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[-(dx||0),-(dy||0)], popupAnchor:[0,-10],
+    html:`<span class="state-label">${esc(name)}</span>` });
 }
 function siteIconFn(){
   return L.divIcon({ className:'', iconSize:[20,30], iconAnchor:[10,30], popupAnchor:[0,-22],
@@ -518,10 +597,63 @@ function cityIconFn(){
         fill="#6FA8DC" stroke="#cfe3f5" stroke-width="1.5"/>
     </svg></div>` });
 }
+function statePinIconFn(){
+  return L.divIcon({ className:'', iconSize:[26,36], iconAnchor:[13,36], popupAnchor:[0,-28],
+    html:`<div class="pin"><svg width="26" height="36" viewBox="0 0 26 36" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 35.5 L10.7 18 H15.3 Z" fill="#cdd3da" stroke="#9aa2ab" stroke-width=".5"/>
+      <circle cx="13" cy="12" r="11" fill="#D9A441" stroke="#f0c96b" stroke-width="1.5"/>
+      <circle cx="9.2" cy="8.2" r="3" fill="#f4d489" opacity=".7"/>
+    </svg></div>` });
+}
 // icons are stateless (no per-marker data baked in) — build once, reuse across
 // every selectState() call instead of allocating a fresh divIcon per marker each time
 const SITE_ICON = siteIconFn();
 const CITY_ICON = cityIconFn();
+const STATE_PIN_ICON = statePinIconFn();
+
+/* ---- real state boundaries: fetched once, cached, drawn on selection --- */
+// Public domain-adjacent, CC0-friendly GeoJSON hosted on Leaflet's own docs —
+// the same file used in Leaflet's official choropleth tutorial.
+const STATE_GEOJSON_URL = 'https://leafletjs.com/examples/choropleth/us-states.json';
+const GEOJSON_NAME_OVERRIDES = { 'Washington, D.C.':'District of Columbia' };
+let STATE_GEOJSON = null;
+let stateGeoJsonPromise = null;
+function loadStateGeoJson(){
+  if(!stateGeoJsonPromise){
+    stateGeoJsonPromise = fetch(STATE_GEOJSON_URL).then(r=>{
+      if(!r.ok) throw new Error('state boundary fetch failed');
+      return r.json();
+    }).then(data=>{ STATE_GEOJSON = data; return data; })
+      .catch(()=>{ STATE_GEOJSON = false; return null; });
+  }
+  return stateGeoJsonPromise;
+}
+loadStateGeoJson(); // kick off in the background at boot so it's usually ready by first selection
+
+function drawStateOutline(st){
+  stateOutline.clearLayers();
+  const drawFallbackCircle = ()=> L.circle([st.lat,st.lng],{
+    radius:180000, color:'#D9A441', weight:3, opacity:.9,
+    fillColor:'#D9A441', fillOpacity:.05, dashArray:'6 5'
+  }).addTo(stateOutline);
+  if(STATE_GEOJSON===null){
+    // still loading — draw the approximation now, upgrade to the real
+    // polygon if it arrives while this state is still selected
+    drawFallbackCircle();
+    loadStateGeoJson().then(()=>{ if(CURRENT_STATE===st) drawStateOutline(st); });
+    return;
+  }
+  const lookupName = GEOJSON_NAME_OVERRIDES[st.name] || st.name;
+  const feature = STATE_GEOJSON && STATE_GEOJSON.features &&
+    STATE_GEOJSON.features.find(f=>f.properties && f.properties.name===lookupName);
+  if(feature){
+    L.geoJSON(feature,{
+      style:{ color:'#D9A441', weight:3, opacity:.95, fillColor:'#D9A441', fillOpacity:.05 }
+    }).addTo(stateOutline);
+  }else{
+    drawFallbackCircle();
+  }
+}
 function panelPad(){ return window.innerWidth<=720 ? 0 : 390; }
 
 const ICONS = {
@@ -536,14 +668,10 @@ function renderHome(){
     <div class="panel-head">
       <span class="eyebrow">Field Guide</span>
       <h2>The country is waiting.</h2>
-      <p>Wander into a landmark, explore what\u2019s near you, or search all 50 states + D.C.</p>
+      <p>Wander into a landmark, explore what\u2019s near you, or search the bar up top for
+      any state, city, or town.</p>
     </div>
     <div class="scroll">
-      <div class="search-wrap">
-        <span class="search-ico">${ICONS.search}</span>
-        <input id="q" type="text" placeholder="Search a state or historic site\u2026" autocomplete="off">
-      </div>
-      <div id="results" class="results"></div>
       <div id="browse">
         <div class="modes">
           <button class="mode" id="m-wander">${ICONS.wander}
@@ -567,30 +695,6 @@ function renderHome(){
         alphabetically \u2014 verify against NPS / Census / state archives before publishing.
       </div>
     </div>`;
-
-  // search
-  const q = panel.querySelector('#q');
-  const results = panel.querySelector('#results');
-  const browse = panel.querySelector('#browse');
-  q.oninput = ()=>{
-    const v = q.value.trim().toLowerCase();
-    if(!v){ results.innerHTML=''; browse.style.display=''; return; }
-    browse.style.display='none';
-    const hits = SEARCH_INDEX.filter(x=>x.label.toLowerCase().includes(v)).slice(0,8);
-    results.innerHTML = hits.length ? hits.map(h=>`
-      <div class="result" data-type="${h.type}" data-a="${h.abbr}" ${h.i!=null?`data-i="${h.i}"`:''}>
-        <span class="tag ${h.type}">${h.type}</span>
-        <div><div class="rname">${esc(h.label)}</div><div class="rsub">${esc(h.sub)}</div></div>
-      </div>`).join('') : `<div class="empty">No matches for \u201c${esc(q.value)}\u201d.</div>`;
-    results.querySelectorAll('.result').forEach(el=>{
-      el.onclick = ()=>{
-        const st = byAbbr(el.dataset.a);
-        if(el.dataset.type==='site') selectState(st, +el.dataset.i);
-        else if(el.dataset.type==='city') selectState(st, null, +el.dataset.i);
-        else selectState(st);
-      };
-    });
-  };
 
   panel.querySelector('#m-wander').onclick = wander;
   panel.querySelector('#m-nearby').onclick = exploreNearby;
@@ -752,6 +856,9 @@ function selectState(st, focusIndex, cityFocusIndex){
   CURRENT_STATE = st;
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
+  statePinLayer.clearLayers();
+  L.marker([st.lat,st.lng],{icon:STATE_PIN_ICON,title:st.name}).addTo(statePinLayer);
+  drawStateOutline(st);
   renderState(st);
   showPanel();
   const sites = st.sites||[];
@@ -834,14 +941,23 @@ function resetToUSA(){
   CURRENT_STATE = null;
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
+  statePinLayer.clearLayers(); stateOutline.clearLayers();
   map.flyTo(USA_VIEW.center,USA_VIEW.zoom,{duration:1.1});
   renderHome();
   hidePanel();
 }
 
 /* ---- boot ------------------------------------------------------ */
+// The small Northeast states sit close enough together at the national
+// view that their text labels collide; nudge them apart (screen pixels).
+const LABEL_NUDGE = {
+  VT:[-16,-20], NH:[18,-14], MA:[26,-2], RI:[34,16], CT:[2,20],
+  NJ:[24,20], DE:[34,12], MD:[-4,32], DC:[36,60], WV:[-42,-18], VA:[8,-16],
+  OH:[-6,-22], IL:[-14,-6], IN:[10,10], MS:[-26,-6], AL:[22,14]
+};
 STATES.forEach(st=>{
-  L.marker([st.lat,st.lng],{icon:stateIcon(st.abbr),title:st.name})
+  const [dx,dy] = LABEL_NUDGE[st.abbr] || [0,0];
+  L.marker([st.lat,st.lng],{icon:stateLabelIcon(st.name,dx,dy),title:st.name})
     .addTo(stateLayer).on('click',()=>selectState(st));
 });
 renderHome();
@@ -849,6 +965,40 @@ fab.onclick = ()=>{
   if(panelEl.classList.contains('open')) hidePanel();
   else { if(!CURRENT_STATE) renderHome(); showPanel(); }
 };
+
+/* ---- persistent top-level search: states, cities, towns, sites --- */
+(function(){
+  const input = document.getElementById('map-search-input');
+  const results = document.getElementById('map-search-results');
+  function renderResults(v){
+    const hits = SEARCH_INDEX.filter(x=>x.label.toLowerCase().includes(v)).slice(0,8);
+    results.innerHTML = hits.length ? hits.map(h=>`
+      <div class="result" data-type="${h.type}" data-a="${h.abbr}" ${h.i!=null?`data-i="${h.i}"`:''}>
+        <span class="tag ${h.type}">${h.type}</span>
+        <div><div class="rname">${esc(h.label)}</div><div class="rsub">${esc(h.sub)}</div></div>
+      </div>`).join('') : `<div class="empty">No matches for “${esc(input.value)}”.</div>`;
+    results.classList.add('open');
+    results.querySelectorAll('.result').forEach(el=>{
+      el.onclick = ()=>{
+        const st = byAbbr(el.dataset.a);
+        if(el.dataset.type==='site') selectState(st, +el.dataset.i);
+        else if(el.dataset.type==='city') selectState(st, null, +el.dataset.i);
+        else selectState(st);
+        results.classList.remove('open');
+      };
+    });
+  }
+  input.oninput = ()=>{
+    const v = input.value.trim().toLowerCase();
+    if(!v){ results.classList.remove('open'); results.innerHTML=''; return; }
+    renderResults(v);
+  };
+  input.addEventListener('keydown', e=>{ if(e.key==='Escape'){ input.value=''; results.classList.remove('open'); input.blur(); } });
+  input.addEventListener('focus', ()=>{ if(input.value.trim()) results.classList.add('open'); });
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('.map-search')) results.classList.remove('open');
+  });
+})();
 </script>
 </body>
 </html>
