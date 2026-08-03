@@ -136,6 +136,7 @@
     cursor:pointer;transition:border-color .15s,transform .05s;overflow:hidden;}
   .site:hover{border-color:var(--brass-d);}
   .site:active{transform:scale(.995);}
+  .site.active{border-color:var(--brass);background:#182129;}
   .site-top{display:flex;align-items:center;gap:11px;padding:12px 14px;}
   .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);flex:none;
     box-shadow:0 0 0 3px rgba(79,176,165,.18);}
@@ -191,7 +192,8 @@
   .pop-name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin-bottom:3px;}
   .pop-est{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--brass);
     letter-spacing:1px;margin-bottom:8px;}
-  .pop-body{font-size:12.5px;line-height:1.55;color:#cdd6da;max-width:230px;}
+  .pop-body{font-size:12.5px;line-height:1.55;color:#cdd6da;max-width:268px;margin-top:8px;}
+  .leaflet-popup-content .gallery{margin-top:8px;}
   .leaflet-container{background:#060a0d;}
   .leaflet-bar a{background:var(--ink2);color:var(--parch);border-color:var(--line);}
   .leaflet-bar a:hover{background:var(--line);}
@@ -225,8 +227,8 @@
     <button id="bm-night">Night lights</button>
   </div>
 
-  <button class="search-fab" id="search-fab" title="Search &amp; browse" aria-label="Search and browse">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+  <button class="search-fab" id="search-fab" title="Open sidebar" aria-label="Open sidebar">
+    <svg id="fab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
   </button>
 
   <aside class="panel"><div id="panel-content"></div></aside>
@@ -447,6 +449,12 @@ document.getElementById('bm-night').onclick = ()=>setBase('night');
 /* data ----------------------------------------------------------- */
 const STATES = window.PINPOINT_STATES;
 const panelEl = document.querySelector('.panel');
+const fab = document.getElementById('search-fab');
+const fabIcon = document.getElementById('fab-icon');
+const FAB_ICONS = {
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/>',
+  close:'<path d="M6 6l12 12M18 6L6 18"/>'
+};
 const panel  = document.getElementById('panel-content');
 let stateLayer = L.layerGroup().addTo(map);
 let siteLayer  = L.layerGroup().addTo(map);
@@ -457,8 +465,14 @@ let cityMarkers = {};
 let CURRENT_STATE = null;
 const IMAGE_CACHE = {};
 
-function showPanel(){ panelEl.classList.add('open'); }
-function hidePanel(){ panelEl.classList.remove('open'); }
+function showPanel(){
+  panelEl.classList.add('open');
+  fabIcon.innerHTML = FAB_ICONS.close; fab.title='Close sidebar'; fab.setAttribute('aria-label',fab.title);
+}
+function hidePanel(){
+  panelEl.classList.remove('open');
+  fabIcon.innerHTML = FAB_ICONS.search; fab.title='Open sidebar'; fab.setAttribute('aria-label',fab.title);
+}
 
 // flat search index + editorial picks
 const SEARCH_INDEX = [];
@@ -609,10 +623,6 @@ function renderState(st){
         <div class="site-top"><span class="dot"></span>
           <div><div class="site-name">${esc(s.name)}</div><div class="site-est">${esc(s.est)}</div></div>
         </div>
-        <div class="site-body">
-          <div class="gallery" data-loaded="0"></div>
-          <p>${esc(s.fact)}</p>
-        </div>
       </div>`).join('')
     : `<div class="empty">No historic sites seeded here yet \u2014 this is where the NPS &amp;
         Wikidata feeds plug in. The dossier above is live.</div>`;
@@ -653,12 +663,13 @@ function renderState(st){
 }
 
 /* ---- photo gallery: fetched live from Wikipedia's media-list API - */
-function ensureGallery(el){
-  if(!el) return;
-  const g = el.querySelector('.gallery');
+/* Lives inside each site's map popup — "over the pin" — not the sidebar. */
+function ensureGalleryPopup(marker, s){
+  const popupEl = marker.getPopup() && marker.getPopup().getElement();
+  if(!popupEl) return;
+  const g = popupEl.querySelector('.gallery');
   if(!g || g.dataset.loaded==='1') return;
   g.dataset.loaded = '1';
-  const s = CURRENT_STATE.sites[+el.dataset.i];
   loadGalleryImages(g, s.wiki||s.name, s.name);
 }
 async function loadGalleryImages(container, title, altFallback){
@@ -728,8 +739,10 @@ function selectState(st, focusIndex, cityFocusIndex){
     const m=L.marker([s.lat,s.lng],{icon:siteIcon()}).addTo(siteLayer)
       .bindPopup(`<div class="pop-name">${esc(s.name)}</div>
                   <div class="pop-est">${esc(s.est)}</div>
-                  <div class="pop-body">${esc(s.fact)}</div>`,{maxWidth:260});
+                  <div class="gallery" data-loaded="0"></div>
+                  <div class="pop-body">${esc(s.fact)}</div>`,{maxWidth:300,minWidth:260});
     m.on('click',()=>highlightListItem(i));
+    m.on('popupopen',()=>ensureGalleryPopup(m,s));
     siteMarkers[i]=m; pts.push([s.lat,s.lng]);
   });
   cities.forEach((c,i)=>{
@@ -755,18 +768,16 @@ function selectState(st, focusIndex, cityFocusIndex){
   }
 }
 function selectSite(st,i,el){
-  const opened=el.classList.contains('open');
-  panel.querySelectorAll('.site').forEach(s=>s.classList.remove('open'));
-  if(!opened){ el.classList.add('open'); ensureGallery(el); }
+  panel.querySelectorAll('.site').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
   cityHighlight.clearLayers();
   const m=siteMarkers[i];
   if(m){ map.flyTo([st.sites[i].lat,st.sites[i].lng],13,{duration:1}); m.openPopup(); }
 }
 function openListItem(i){
   const el=panel.querySelector(`.site[data-kind="site"][data-i="${i}"]`); if(!el) return;
-  panel.querySelectorAll('.site').forEach(s=>s.classList.remove('open'));
-  el.classList.add('open'); el.scrollIntoView({behavior:'smooth',block:'center'});
-  ensureGallery(el);
+  panel.querySelectorAll('.site').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active'); el.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function highlightListItem(i){ cityHighlight.clearLayers(); openListItem(i); }
 
@@ -798,6 +809,7 @@ function highlightCityFromMap(st,i){
   openCityListItem(i);
 }
 function resetToUSA(){
+  CURRENT_STATE = null;
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   map.flyTo(USA_VIEW.center,USA_VIEW.zoom,{duration:1.1});
@@ -811,7 +823,10 @@ STATES.forEach(st=>{
     .addTo(stateLayer).on('click',()=>selectState(st));
 });
 renderHome();
-document.getElementById('search-fab').onclick = ()=>{ renderHome(); showPanel(); };
+fab.onclick = ()=>{
+  if(panelEl.classList.contains('open')) hidePanel();
+  else { if(!CURRENT_STATE) renderHome(); showPanel(); }
+};
 </script>
 </body>
 </html>
