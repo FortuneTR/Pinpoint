@@ -68,7 +68,8 @@
   .panel-head p{margin:12px 0 0;font-size:13.5px;line-height:1.6;color:var(--mute);}
   .abbr{font-family:'IBM Plex Mono',monospace;color:var(--mute);font-size:13px;margin-left:8px;}
 
-  .scroll{overflow-y:auto;flex:1;}
+  #panel-content{display:flex;flex-direction:column;height:100%;min-height:0;}
+  .scroll{overflow-y:auto;flex:1;min-height:0;}
   .scroll::-webkit-scrollbar{width:8px;}
   .scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
 
@@ -142,9 +143,29 @@
   .site-name{font-size:14px;font-weight:500;line-height:1.25;}
   .site-est{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mute);
     margin-top:2px;letter-spacing:.5px;}
-  .site-body{max-height:0;opacity:0;transition:max-height .25s ease,opacity .2s;padding:0 14px;}
-  .site.open .site-body{max-height:280px;opacity:1;padding:0 14px 14px 34px;}
-  .site-body p{margin:0;font-size:12.5px;line-height:1.55;color:#cdd6da;}
+  .site-body{max-height:0;opacity:0;transition:max-height .3s ease,opacity .2s;padding:0 14px;}
+  .site.open .site-body{max-height:430px;opacity:1;padding:0 14px 14px 34px;}
+  .site-body p{margin:0 0 8px;font-size:12.5px;line-height:1.55;color:#cdd6da;}
+  .site-body p:last-child{margin-bottom:0;}
+
+  /* ---- photo gallery: scrollable image strip atop the description --- */
+  .gallery{position:relative;margin:2px 0 10px;border-radius:8px;overflow:hidden;
+    background:#060a0d;border:1px solid var(--line);}
+  .gallery-track{display:flex;overflow-x:auto;scroll-snap-type:x proximity;
+    scrollbar-width:none;-ms-overflow-style:none;}
+  .gallery-track::-webkit-scrollbar{display:none;}
+  .gallery-slide{flex:0 0 100%;scroll-snap-align:start;}
+  .gallery-slide img{width:100%;height:150px;object-fit:cover;display:block;}
+  .gallery-status{padding:16px 14px;font-size:11.5px;color:var(--mute);text-align:center;}
+  .gallery-nav{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;
+    border-radius:50%;background:rgba(11,16,19,.72);border:1px solid rgba(236,230,216,.28);
+    color:var(--parch);display:flex;align-items:center;justify-content:center;cursor:pointer;
+    font-size:12px;line-height:1;user-select:none;transition:background .15s;}
+  .gallery-nav:hover{background:rgba(11,16,19,.92);}
+  .gallery-nav.prev{left:6px;} .gallery-nav.next{right:6px;}
+  .gallery-dots{display:flex;gap:5px;justify-content:center;padding:7px 0;background:#060a0d;}
+  .gallery-dots span{width:5px;height:5px;border-radius:50%;background:rgba(236,230,216,.25);}
+  .gallery-dots span.on{background:var(--brass);}
 
   .empty{padding:20px 22px;color:var(--mute);font-size:13px;line-height:1.6;}
 
@@ -257,7 +278,7 @@ window.PINPOINT_STATES = [
         fact:"In St. Augustine \u2014 the oldest masonry fort in the continental U.S. Its walls are coquina, a soft shell-stone that absorbed cannonballs instead of shattering." },
       { name:"Kennedy Space Center", est:"Established 1962", lat:28.5729, lng:-80.6490,
         fact:"Launch site for every crewed U.S. Moon mission and the Space Shuttle. Launch Complex 39A sent Apollo 11 skyward on July 16, 1969." },
-      { name:"St. Augustine (Old Town)", est:"Founded 1565", lat:29.8947, lng:-81.3145,
+      { name:"St. Augustine (Old Town)", wiki:"St. Augustine, Florida", est:"Founded 1565", lat:29.8947, lng:-81.3145,
         fact:"The oldest continuously occupied European-established settlement in the continental U.S. \u2014 predating Jamestown by 42 years." }
     ], cities:[ { name:"Miami", lat:25.7617, lng:-80.1918, founded:"1896", origin:"From the Mayaimi people and Lake Mayaimi (now Lake Okeechobee), a name often glossed 'big water.'", fact:"Julia Tuttle, the only woman to found a major American city, convinced Henry Flagler to extend his railroad here after a hard 1894 freeze spared Miami's citrus." } ] },
   { name:"Georgia", abbr:"GA", lat:32.7, lng:-83.5, admitted:"01/02/1788", order:"4th state",
@@ -319,7 +340,7 @@ window.PINPOINT_STATES = [
         fact:"A gift from France designed by Fr\u00e9d\u00e9ric-Auguste Bartholdi. Its internal iron skeleton was engineered by Gustave Eiffel, who later built his tower in Paris." },
       { name:"Ellis Island", est:"Opened 1892", lat:40.6995, lng:-74.0397,
         fact:"The nation\u2019s busiest immigration station until 1954 \u2014 roughly 12 million people passed through its Great Hall on their way into America." },
-      { name:"9/11 Memorial & One WTC", est:"Memorial opened 2011", lat:40.7115, lng:-74.0134,
+      { name:"9/11 Memorial & One WTC", wiki:"National September 11 Memorial & Museum", est:"Memorial opened 2011", lat:40.7115, lng:-74.0134,
         fact:"Twin reflecting pools sit in the footprints of the original towers. One World Trade Center rises to 1,776 feet \u2014 a nod to 1776." },
       { name:"Niagara Falls State Park", est:"Established 1885", lat:43.0828, lng:-79.0648,
         fact:"The oldest state park in the United States, laid out by Frederick Law Olmsted \u2014 the landscape architect behind Central Park." }
@@ -381,9 +402,9 @@ window.PINPOINT_STATES = [
         fact:"Its 19-foot marble Lincoln faces the Mall. On its steps in 1963, Martin Luther King Jr. delivered the \u201cI Have a Dream\u201d speech." },
       { name:"Washington Monument", est:"Completed 1884", lat:38.8895, lng:-77.0353,
         fact:"A 555-foot marble obelisk. A funding gap mid-build left a visible color change in the stone about a third of the way up." },
-      { name:"U.S. Capitol", est:"Cornerstone 1793", lat:38.8899, lng:-77.0091,
+      { name:"U.S. Capitol", wiki:"United States Capitol", est:"Cornerstone 1793", lat:38.8899, lng:-77.0091,
         fact:"Home of Congress. Its cast-iron dome was completed during the Civil War \u2014 Lincoln insisted work continue as a sign the Union would endure." },
-      { name:"The White House", est:"Completed 1800", lat:38.8977, lng:-77.0365,
+      { name:"The White House", wiki:"White House", est:"Completed 1800", lat:38.8977, lng:-77.0365,
         fact:"Every president except George Washington has lived here. British troops burned it in 1814; it was rebuilt and reoccupied by 1817." }
     ], cities:[ { name:"Georgetown", lat:38.9097, lng:-77.0654, founded:"1751", origin:"Chartered by the Maryland colonial legislature and named for King George II.", fact:"Already a busy tobacco port decades before the federal district existed \u2014 it was folded into Washington in 1871." } ] }
 ];
@@ -433,6 +454,8 @@ let cityLayer  = L.layerGroup().addTo(map);
 let cityHighlight = L.layerGroup().addTo(map);
 let siteMarkers = {};
 let cityMarkers = {};
+let CURRENT_STATE = null;
+const IMAGE_CACHE = {};
 
 function showPanel(){ panelEl.classList.add('open'); }
 function hidePanel(){ panelEl.classList.remove('open'); }
@@ -586,7 +609,10 @@ function renderState(st){
         <div class="site-top"><span class="dot"></span>
           <div><div class="site-name">${esc(s.name)}</div><div class="site-est">${esc(s.est)}</div></div>
         </div>
-        <div class="site-body"><p>${esc(s.fact)}</p></div>
+        <div class="site-body">
+          <div class="gallery" data-loaded="0"></div>
+          <p>${esc(s.fact)}</p>
+        </div>
       </div>`).join('')
     : `<div class="empty">No historic sites seeded here yet \u2014 this is where the NPS &amp;
         Wikidata feeds plug in. The dossier above is live.</div>`;
@@ -626,9 +652,71 @@ function renderState(st){
   panel.querySelectorAll('.site[data-kind="city"]').forEach(el=> el.onclick = ()=> selectCityFromList(st,+el.dataset.i,el));
 }
 
+/* ---- photo gallery: fetched live from Wikipedia's media-list API - */
+function ensureGallery(el){
+  if(!el) return;
+  const g = el.querySelector('.gallery');
+  if(!g || g.dataset.loaded==='1') return;
+  g.dataset.loaded = '1';
+  const s = CURRENT_STATE.sites[+el.dataset.i];
+  loadGalleryImages(g, s.wiki||s.name, s.name);
+}
+async function loadGalleryImages(container, title, altFallback){
+  if(IMAGE_CACHE[title]){ renderGallery(container, IMAGE_CACHE[title]); return; }
+  container.innerHTML = `<div class="gallery-status">Loading photos…</div>`;
+  try{
+    const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(title)}`);
+    if(!res.ok) throw new Error('no media-list for '+title);
+    const data = await res.json();
+    const images = (data.items||[])
+      .filter(it=>it.type==='image' && Array.isArray(it.srcset) && it.srcset.length)
+      .slice(0,6)
+      .map(it=>{
+        const variant = it.srcset[Math.min(1,it.srcset.length-1)];
+        let src = variant.src; if(src.startsWith('//')) src = 'https:'+src;
+        const alt = (it.title||altFallback).replace(/^File:/,'').replace(/\.[a-zA-Z0-9]+$/,'');
+        return { src, alt };
+      });
+    IMAGE_CACHE[title] = images;
+    renderGallery(container, images);
+  }catch(e){
+    IMAGE_CACHE[title] = [];
+    renderGallery(container, []);
+  }
+}
+function renderGallery(container, images){
+  if(!images.length){
+    container.innerHTML = `<div class="gallery-status">No photos available yet.</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="gallery-track">${images.map(im=>
+      `<div class="gallery-slide"><img src="${im.src}" alt="${esc(im.alt)}" loading="lazy"
+        onerror="this.closest('.gallery-slide').remove()"></div>`).join('')}</div>
+    ${images.length>1 ? `
+      <button class="gallery-nav prev" aria-label="Previous photo">‹</button>
+      <button class="gallery-nav next" aria-label="Next photo">›</button>
+      <div class="gallery-dots">${images.map((_,i)=>`<span class="${i===0?'on':''}"></span>`).join('')}</div>` : ''}`;
+  const track = container.querySelector('.gallery-track');
+  const dots  = container.querySelectorAll('.gallery-dots span');
+  const prev  = container.querySelector('.gallery-nav.prev');
+  const next  = container.querySelector('.gallery-nav.next');
+  const go = delta => track.scrollBy({ left: track.clientWidth*delta, behavior:'smooth' });
+  if(prev) prev.onclick = ()=>go(-1);
+  if(next) next.onclick = ()=>go(1);
+  track.addEventListener('wheel', e=>{
+    if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ e.preventDefault(); track.scrollLeft += e.deltaY; }
+  }, { passive:false });
+  track.addEventListener('scroll', ()=>{
+    const idx = Math.round(track.scrollLeft/track.clientWidth);
+    dots.forEach((d,i)=>d.classList.toggle('on', i===idx));
+  });
+}
+
 /* ---- selection flow -------------------------------------------- */
 function selectState(st, focusIndex, cityFocusIndex){
   setBase('sat');                         // crisp detail when exploring
+  CURRENT_STATE = st;
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   renderState(st);
@@ -669,7 +757,7 @@ function selectState(st, focusIndex, cityFocusIndex){
 function selectSite(st,i,el){
   const opened=el.classList.contains('open');
   panel.querySelectorAll('.site').forEach(s=>s.classList.remove('open'));
-  if(!opened) el.classList.add('open');
+  if(!opened){ el.classList.add('open'); ensureGallery(el); }
   cityHighlight.clearLayers();
   const m=siteMarkers[i];
   if(m){ map.flyTo([st.sites[i].lat,st.sites[i].lng],13,{duration:1}); m.openPopup(); }
@@ -678,6 +766,7 @@ function openListItem(i){
   const el=panel.querySelector(`.site[data-kind="site"][data-i="${i}"]`); if(!el) return;
   panel.querySelectorAll('.site').forEach(s=>s.classList.remove('open'));
   el.classList.add('open'); el.scrollIntoView({behavior:'smooth',block:'center'});
+  ensureGallery(el);
 }
 function highlightListItem(i){ cityHighlight.clearLayers(); openListItem(i); }
 

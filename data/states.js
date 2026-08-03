@@ -6,9 +6,11 @@
      admitted   "MM/DD/YYYY"   statehood date (ratification for the original 13)
      order                     admission order, or note for D.C.
      origin                    short name-origin summary
-     sites[]    { name, est, lat, lng, fact }
-     cities[]   { name, lat, lng, founded, origin, fact } — seed coverage starts
-                with one major city per state, expanding alphabetically
+     sites[]    { name, est, lat, lng, fact, wiki? } — wiki overrides the
+                Wikipedia article title when it differs from name, used
+                to fetch a live photo gallery client-side
+     cities[]   { name, lat, lng, founded, origin, fact } — seed coverage
+                starts with one major city per state, expanding alphabetically
    NOTE: Dates & origins are best-effort seed data. Verify against NPS /
    U.S. Census / state archives before treating as authoritative.
    ================================================================== */
@@ -44,7 +46,7 @@ window.PINPOINT_STATES = [
         fact:"In St. Augustine \u2014 the oldest masonry fort in the continental U.S. Its walls are coquina, a soft shell-stone that absorbed cannonballs instead of shattering." },
       { name:"Kennedy Space Center", est:"Established 1962", lat:28.5729, lng:-80.6490,
         fact:"Launch site for every crewed U.S. Moon mission and the Space Shuttle. Launch Complex 39A sent Apollo 11 skyward on July 16, 1969." },
-      { name:"St. Augustine (Old Town)", est:"Founded 1565", lat:29.8947, lng:-81.3145,
+      { name:"St. Augustine (Old Town)", wiki:"St. Augustine, Florida", est:"Founded 1565", lat:29.8947, lng:-81.3145,
         fact:"The oldest continuously occupied European-established settlement in the continental U.S. \u2014 predating Jamestown by 42 years." }
     ], cities:[ { name:"Miami", lat:25.7617, lng:-80.1918, founded:"1896", origin:"From the Mayaimi people and Lake Mayaimi (now Lake Okeechobee), a name often glossed 'big water.'", fact:"Julia Tuttle, the only woman to found a major American city, convinced Henry Flagler to extend his railroad here after a hard 1894 freeze spared Miami's citrus." } ] },
   { name:"Georgia", abbr:"GA", lat:32.7, lng:-83.5, admitted:"01/02/1788", order:"4th state",
@@ -106,7 +108,7 @@ window.PINPOINT_STATES = [
         fact:"A gift from France designed by Fr\u00e9d\u00e9ric-Auguste Bartholdi. Its internal iron skeleton was engineered by Gustave Eiffel, who later built his tower in Paris." },
       { name:"Ellis Island", est:"Opened 1892", lat:40.6995, lng:-74.0397,
         fact:"The nation\u2019s busiest immigration station until 1954 \u2014 roughly 12 million people passed through its Great Hall on their way into America." },
-      { name:"9/11 Memorial & One WTC", est:"Memorial opened 2011", lat:40.7115, lng:-74.0134,
+      { name:"9/11 Memorial & One WTC", wiki:"National September 11 Memorial & Museum", est:"Memorial opened 2011", lat:40.7115, lng:-74.0134,
         fact:"Twin reflecting pools sit in the footprints of the original towers. One World Trade Center rises to 1,776 feet \u2014 a nod to 1776." },
       { name:"Niagara Falls State Park", est:"Established 1885", lat:43.0828, lng:-79.0648,
         fact:"The oldest state park in the United States, laid out by Frederick Law Olmsted \u2014 the landscape architect behind Central Park." }
@@ -168,9 +170,9 @@ window.PINPOINT_STATES = [
         fact:"Its 19-foot marble Lincoln faces the Mall. On its steps in 1963, Martin Luther King Jr. delivered the \u201cI Have a Dream\u201d speech." },
       { name:"Washington Monument", est:"Completed 1884", lat:38.8895, lng:-77.0353,
         fact:"A 555-foot marble obelisk. A funding gap mid-build left a visible color change in the stone about a third of the way up." },
-      { name:"U.S. Capitol", est:"Cornerstone 1793", lat:38.8899, lng:-77.0091,
+      { name:"U.S. Capitol", wiki:"United States Capitol", est:"Cornerstone 1793", lat:38.8899, lng:-77.0091,
         fact:"Home of Congress. Its cast-iron dome was completed during the Civil War \u2014 Lincoln insisted work continue as a sign the Union would endure." },
-      { name:"The White House", est:"Completed 1800", lat:38.8977, lng:-77.0365,
+      { name:"The White House", wiki:"White House", est:"Completed 1800", lat:38.8977, lng:-77.0365,
         fact:"Every president except George Washington has lived here. British troops burned it in 1814; it was rebuilt and reoccupied by 1817." }
     ], cities:[ { name:"Georgetown", lat:38.9097, lng:-77.0654, founded:"1751", origin:"Chartered by the Maryland colonial legislature and named for King George II.", fact:"Already a busy tobacco port decades before the federal district existed \u2014 it was folded into Washington in 1871." } ] }
 ];

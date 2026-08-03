@@ -206,6 +206,7 @@
       },
       {
         "name": "St. Augustine (Old Town)",
+        "wiki": "St. Augustine, Florida",
         "est": "Founded 1565",
         "lat": 29.8947,
         "lng": -81.3145,
@@ -710,6 +711,7 @@
       },
       {
         "name": "9/11 Memorial & One WTC",
+        "wiki": "National September 11 Memorial & Museum",
         "est": "Memorial opened 2011",
         "lat": 40.7115,
         "lng": -74.0134,
@@ -1156,6 +1158,7 @@
       },
       {
         "name": "U.S. Capitol",
+        "wiki": "United States Capitol",
         "est": "Cornerstone 1793",
         "lat": 38.8899,
         "lng": -77.0091,
@@ -1163,6 +1166,7 @@
       },
       {
         "name": "The White House",
+        "wiki": "White House",
         "est": "Completed 1800",
         "lat": 38.8977,
         "lng": -77.0365,
