@@ -51,7 +51,8 @@
     background:linear-gradient(180deg,rgba(11,16,19,.94),rgba(11,16,19,.985));
     border-left:1px solid var(--line);backdrop-filter:blur(10px);
     display:flex;flex-direction:column;box-shadow:-18px 0 46px rgba(0,0,0,.5);
-    transform:translateX(105%);transition:transform .38s cubic-bezier(.4,0,.2,1);}
+    transform:translateX(105%);transition:transform .38s cubic-bezier(.4,0,.2,1);
+    will-change:transform;}
   .panel.open{transform:translateX(0);}
 
   /* ---- search FAB: the only thing visible before you pick a state/city */
@@ -418,19 +419,22 @@ window.PINPOINT_STATES = [
    Modes inspired by WaveAtlas: Wander · Explore nearby · Search · Editorial Picks
    ================================================================ */
 const USA_VIEW = { center:[38.5,-96.5], zoom:4 };
-const map = L.map('map',{ zoomControl:true, minZoom:3, maxZoom:18, worldCopyJump:false })
+const map = L.map('map',{ zoomControl:true, minZoom:3, maxZoom:18, worldCopyJump:false, preferCanvas:true })
   .setView(USA_VIEW.center, USA_VIEW.zoom);
 
 /* basemaps ------------------------------------------------------- */
+// keepBuffer/updateWhenZooming: keep more offscreen tiles cached and skip
+// mid-zoom tile churn so flyTo/zoom animations don't stutter waiting on network.
+const TILE_OPTS = { updateWhenZooming:false, keepBuffer:4 };
 const satImagery = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { attribution:'Imagery © Esri, Maxar, Earthstar Geographics', maxZoom:18 });
+  { attribution:'Imagery © Esri, Maxar, Earthstar Geographics', maxZoom:18, ...TILE_OPTS });
 const satLabels = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-  { maxZoom:18, opacity:.9 });
+  { maxZoom:18, opacity:.9, ...TILE_OPTS });
 const nightLights = L.tileLayer(
   'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
-  { attribution:'Earth at Night © NASA Earth Observatory', maxNativeZoom:8, maxZoom:18 });
+  { attribution:'Earth at Night © NASA Earth Observatory', maxNativeZoom:8, maxZoom:18, ...TILE_OPTS });
 
 const satGroup = L.layerGroup([satImagery, satLabels]);
 satGroup.addTo(map);
@@ -499,7 +503,7 @@ function stateIcon(a){
       <text x="15" y="17.6" text-anchor="middle" font-family="'IBM Plex Mono',ui-monospace,monospace" font-weight="600" font-size="10" fill="#1a1206">${a}</text>
     </svg></div>` });
 }
-function siteIcon(){
+function siteIconFn(){
   return L.divIcon({ className:'', iconSize:[20,30], iconAnchor:[10,30], popupAnchor:[0,-22],
     html:`<div class="pin"><svg width="20" height="30" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
       <path d="M10 29.5 L8.3 15 H11.7 Z" fill="#cdd3da" stroke="#9aa2ab" stroke-width=".5"/>
@@ -507,13 +511,17 @@ function siteIcon(){
       <circle cx="7.4" cy="6.4" r="2.2" fill="#bff0ea" opacity=".65"/>
     </svg></div>` });
 }
-function cityIcon(){
+function cityIconFn(){
   return L.divIcon({ className:'', iconSize:[16,16], iconAnchor:[8,8], popupAnchor:[0,-8],
     html:`<div class="pin"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
       <rect x="2" y="2" width="12" height="12" rx="3" transform="rotate(45 8 8)"
         fill="#6FA8DC" stroke="#cfe3f5" stroke-width="1.5"/>
     </svg></div>` });
 }
+// icons are stateless (no per-marker data baked in) — build once, reuse across
+// every selectState() call instead of allocating a fresh divIcon per marker each time
+const SITE_ICON = siteIconFn();
+const CITY_ICON = cityIconFn();
 function panelPad(){ return window.innerWidth<=720 ? 0 : 390; }
 
 const ICONS = {
@@ -672,6 +680,15 @@ function ensureGalleryPopup(marker, s){
   g.dataset.loaded = '1';
   loadGalleryImages(g, s.wiki||s.name, s.name);
 }
+// Wikipedia's media-list mixes real photos of the subject in with maps, seals,
+// locator diagrams, and flag icons pulled from infoboxes — filter those out so
+// the majority of what's shown is actually a picture of the site itself.
+const NON_PHOTO_EXT = /\.(svg|gif|ogv|webm|ogg)$/i;
+const NON_PHOTO_NAME = /\b(locator|map|flag|seal|logo|coat of arms|coa|diagram|chart|emblem|symbol|icon|screenshot|banner|wordmark|signature)\b/i;
+const looksLikePhoto = fname => {
+  const clean = (fname||'').replace(/_/g,' ');
+  return !NON_PHOTO_EXT.test(clean) && !NON_PHOTO_NAME.test(clean);
+};
 async function loadGalleryImages(container, title, altFallback){
   if(IMAGE_CACHE[title]){ renderGallery(container, IMAGE_CACHE[title]); return; }
   container.innerHTML = `<div class="gallery-status">Loading photos…</div>`;
@@ -680,8 +697,8 @@ async function loadGalleryImages(container, title, altFallback){
     if(!res.ok) throw new Error('no media-list for '+title);
     const data = await res.json();
     const images = (data.items||[])
-      .filter(it=>it.type==='image' && Array.isArray(it.srcset) && it.srcset.length)
-      .slice(0,6)
+      .filter(it=>it.type==='image' && Array.isArray(it.srcset) && it.srcset.length && looksLikePhoto(it.title))
+      .slice(0,8)
       .map(it=>{
         const variant = it.srcset[Math.min(1,it.srcset.length-1)];
         let src = variant.src; if(src.startsWith('//')) src = 'https:'+src;
@@ -718,10 +735,15 @@ function renderGallery(container, images){
   track.addEventListener('wheel', e=>{
     if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ e.preventDefault(); track.scrollLeft += e.deltaY; }
   }, { passive:false });
+  let dotsRaf = null;
   track.addEventListener('scroll', ()=>{
-    const idx = Math.round(track.scrollLeft/track.clientWidth);
-    dots.forEach((d,i)=>d.classList.toggle('on', i===idx));
-  });
+    if(dotsRaf) return;
+    dotsRaf = requestAnimationFrame(()=>{
+      dotsRaf = null;
+      const idx = Math.round(track.scrollLeft/track.clientWidth);
+      dots.forEach((d,i)=>d.classList.toggle('on', i===idx));
+    });
+  }, { passive:true });
 }
 
 /* ---- selection flow -------------------------------------------- */
@@ -736,7 +758,7 @@ function selectState(st, focusIndex, cityFocusIndex){
   const cities = st.cities||[];
   const pts=[];
   sites.forEach((s,i)=>{
-    const m=L.marker([s.lat,s.lng],{icon:siteIcon()}).addTo(siteLayer)
+    const m=L.marker([s.lat,s.lng],{icon:SITE_ICON}).addTo(siteLayer)
       .bindPopup(`<div class="pop-name">${esc(s.name)}</div>
                   <div class="pop-est">${esc(s.est)}</div>
                   <div class="gallery" data-loaded="0"></div>
@@ -746,7 +768,7 @@ function selectState(st, focusIndex, cityFocusIndex){
     siteMarkers[i]=m; pts.push([s.lat,s.lng]);
   });
   cities.forEach((c,i)=>{
-    const m=L.marker([c.lat,c.lng],{icon:cityIcon()}).addTo(cityLayer)
+    const m=L.marker([c.lat,c.lng],{icon:CITY_ICON}).addTo(cityLayer)
       .bindPopup(`<div class="pop-name">${esc(c.name)}</div>
                   <div class="pop-est">Founded ${esc(c.founded)}</div>
                   <div class="pop-body">${esc(c.fact)}</div>`,{maxWidth:260});
