@@ -628,11 +628,13 @@ function loadStateGeoJson(){
 }
 loadStateGeoJson(); // kick off in the background at boot so it's usually ready by first selection
 
+// Google-Maps-inspired boundary treatment: a crisp dashed line with rounded
+// joins/caps and a faint fill tint, rather than a solid stroke.
+const BOUNDARY_STYLE = { weight:2.5, opacity:.95, dashArray:'6 4', lineJoin:'round', lineCap:'round' };
 function drawStateOutline(st){
   stateOutline.clearLayers();
   const drawFallbackCircle = ()=> L.circle([st.lat,st.lng],{
-    radius:180000, color:'#D9A441', weight:3, opacity:.9,
-    fillColor:'#D9A441', fillOpacity:.05, dashArray:'6 5'
+    ...BOUNDARY_STYLE, radius:180000, color:'#D9A441', fillColor:'#D9A441', fillOpacity:.06
   }).addTo(stateOutline);
   if(STATE_GEOJSON===null){
     // still loading — draw the approximation now, upgrade to the real
@@ -646,7 +648,7 @@ function drawStateOutline(st){
     STATE_GEOJSON.features.find(f=>f.properties && f.properties.name===lookupName);
   if(feature){
     L.geoJSON(feature,{
-      style:{ color:'#D9A441', weight:3, opacity:.95, fillColor:'#D9A441', fillOpacity:.05 }
+      style:{ ...BOUNDARY_STYLE, color:'#D9A441', fillColor:'#D9A441', fillOpacity:.06 }
     }).addTo(stateOutline);
   }else{
     drawFallbackCircle();
@@ -912,8 +914,7 @@ function highlightListItem(i){ cityHighlight.clearLayers(); openListItem(i); }
 function drawCityOutline(c){
   cityHighlight.clearLayers();
   L.circle([c.lat,c.lng],{
-    radius:c.radius||9000, color:'#6FA8DC', weight:2.5, opacity:.9,
-    fillColor:'#6FA8DC', fillOpacity:.12, dashArray:'6 5'
+    ...BOUNDARY_STYLE, radius:c.radius||9000, color:'#6FA8DC', fillColor:'#6FA8DC', fillOpacity:.1
   }).addTo(cityHighlight);
 }
 function openCityListItem(i){
