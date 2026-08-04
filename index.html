@@ -217,13 +217,14 @@
   .pin svg{display:block;}
   .pin:hover{transform:translateY(-2px) scale(1.08);}
 
-  /* ---- state name labels: no pin graphic, just legible text ------- */
-  .state-label{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
-    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;letter-spacing:.3px;
-    color:var(--parch);white-space:nowrap;cursor:pointer;user-select:none;
-    text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.9);
-    transition:color .15s,text-shadow .15s;}
-  .state-label:hover{color:var(--brass);}
+  /* ---- state click targets: no pin, no text — the boundaries/labels
+     basemap layer already renders each state's name (with its own,
+     better collision handling), so this is just an invisible hit area
+     that lights up on hover to confirm it's clickable. -------------- */
+  .state-hit{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
+    width:56px;height:30px;border-radius:15px;cursor:pointer;
+    background:transparent;transition:background .15s,box-shadow .15s;}
+  .state-hit:hover{background:rgba(217,164,65,.16);box-shadow:0 0 0 1px rgba(217,164,65,.5);}
 
   .leaflet-popup-content-wrapper{background:var(--ink2);color:var(--parch);
     border:1px solid var(--brass-d);border-radius:10px;}
@@ -574,14 +575,11 @@ const PICKS = [
 const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const byAbbr = a => STATES.find(s=>s.abbr===a);
 function siteIndex(st,name){ return (st.sites||[]).findIndex(s=>s.name===name); }
-function stateLabelIcon(name, dx, dy){
-  // No pin graphic — just a legible, centered text label (Google-Earth-style
-  // place name). iconSize:[0,0] + the inner span's own centering transform
-  // lets it size to its text naturally instead of a fixed pin footprint.
-  // dx/dy (screen pixels) nudge labels apart in the crowded Northeast cluster.
-  return L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[-(dx||0),-(dy||0)], popupAnchor:[0,-10],
-    html:`<span class="state-label">${esc(name)}</span>` });
-}
+// A single shared invisible-hit-area icon — the basemap's own boundaries/
+// labels layer already draws the state's name, so there's nothing to render
+// here beyond a clickable, hoverable target (see .state-hit CSS).
+const STATE_HIT_ICON = L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,0],
+  html:`<span class="state-hit"></span>` });
 function siteIconFn(){
   return L.divIcon({ className:'', iconSize:[20,30], iconAnchor:[10,30], popupAnchor:[0,-22],
     html:`<div class="pin"><svg width="20" height="30" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
@@ -948,16 +946,8 @@ function resetToUSA(){
 }
 
 /* ---- boot ------------------------------------------------------ */
-// The small Northeast states sit close enough together at the national
-// view that their text labels collide; nudge them apart (screen pixels).
-const LABEL_NUDGE = {
-  VT:[-16,-20], NH:[18,-14], MA:[26,-2], RI:[34,16], CT:[2,20],
-  NJ:[24,20], DE:[34,12], MD:[-4,32], DC:[36,60], WV:[-42,-18], VA:[8,-16],
-  OH:[-6,-22], IL:[-14,-6], IN:[10,10], MS:[-26,-6], AL:[22,14]
-};
 STATES.forEach(st=>{
-  const [dx,dy] = LABEL_NUDGE[st.abbr] || [0,0];
-  L.marker([st.lat,st.lng],{icon:stateLabelIcon(st.name,dx,dy),title:st.name})
+  L.marker([st.lat,st.lng],{icon:STATE_HIT_ICON,title:st.name})
     .addTo(stateLayer).on('click',()=>selectState(st));
 });
 renderHome();
