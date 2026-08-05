@@ -860,8 +860,13 @@ function selectState(st, focusIndex, cityFocusIndex){
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   statePinLayer.clearLayers();
-  L.marker([st.lat,st.lng],{icon:STATE_PIN_ICON,title:st.name}).addTo(statePinLayer);
   drawStateOutline(st);
+  // Anchor the pin to the real polygon's bounding-box center when we have one,
+  // instead of the seed data's hand-picked lat/lng — that's what puts it near
+  // where the basemap's own "Kansas"-style label actually sits, rather than
+  // an arbitrary point that was only ever a rough guess.
+  const pinLatLng = stateOutline.getLayers().length ? stateOutline.getBounds().getCenter() : [st.lat,st.lng];
+  L.marker(pinLatLng,{icon:STATE_PIN_ICON,title:st.name}).addTo(statePinLayer);
   renderState(st);
   showPanel();
   const sites = st.sites||[];
