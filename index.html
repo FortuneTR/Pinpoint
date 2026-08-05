@@ -544,7 +544,7 @@ let siteLayer  = L.layerGroup().addTo(map);
 let cityLayer  = L.layerGroup().addTo(map);
 let cityHighlight = L.layerGroup().addTo(map);
 let statePinLayer = L.layerGroup().addTo(map);
-let stateOutline  = L.layerGroup().addTo(map);
+let stateOutline  = L.featureGroup().addTo(map); // featureGroup so getBounds() works
 let siteMarkers = {};
 let cityMarkers = {};
 let CURRENT_STATE = null;
@@ -610,19 +610,22 @@ const CITY_ICON = cityIconFn();
 const STATE_PIN_ICON = statePinIconFn();
 
 /* ---- real state boundaries: fetched once, cached, drawn on selection --- */
-// Public domain-adjacent, CC0-friendly GeoJSON hosted on Leaflet's own docs —
-// the same file used in Leaflet's official choropleth tutorial.
-const STATE_GEOJSON_URL = 'https://leafletjs.com/examples/choropleth/us-states.json';
+// Bundled locally (data/us-states.json) rather than fetched from a third-party
+// host at runtime — that's more robust than depending on an external CDN's
+// uptime/CORS policy, and avoids the cross-origin fetch failing silently.
+// Source: US Census-derived state polygons (properties.name = full state name),
+// via the widely-used PublicaMundi/MappingAPI GeoJSON sample set.
+const STATE_GEOJSON_URL = 'data/us-states.json';
 const GEOJSON_NAME_OVERRIDES = { 'Washington, D.C.':'District of Columbia' };
 let STATE_GEOJSON = null;
 let stateGeoJsonPromise = null;
 function loadStateGeoJson(){
   if(!stateGeoJsonPromise){
     stateGeoJsonPromise = fetch(STATE_GEOJSON_URL).then(r=>{
-      if(!r.ok) throw new Error('state boundary fetch failed');
+      if(!r.ok) throw new Error('state boundary fetch failed: '+r.status);
       return r.json();
     }).then(data=>{ STATE_GEOJSON = data; return data; })
-      .catch(()=>{ STATE_GEOJSON = false; return null; });
+      .catch(err=>{ console.warn('Pinpoint: state boundaries unavailable, falling back to circles.', err); STATE_GEOJSON = false; return null; });
   }
   return stateGeoJsonPromise;
 }
@@ -889,11 +892,19 @@ function selectState(st, focusIndex, cityFocusIndex){
   }else if(cityFocusIndex!=null && cities[cityFocusIndex]){
     setTimeout(()=> selectCityFromList(st,cityFocusIndex,
       panel.querySelector(`.site[data-kind="city"][data-i="${cityFocusIndex}"]`)),700);
-  }else if(pts.length){
-    map.flyToBounds(L.latLngBounds(pts).pad(0.4),
-      {maxZoom:11,duration:1.1,paddingTopLeft:[0,60],paddingBottomRight:[panelPad(),0]});
   }else{
-    map.flyTo([st.lat,st.lng],6,{duration:1.1});
+    // General state view: frame the state's own outline, not just its (often
+    // sparse) site/city points — otherwise a state with one city zooms in so
+    // tight the boundary we just drew never actually appears on screen.
+    const hasOutline = stateOutline.getLayers().length>0;
+    const bounds = hasOutline ? stateOutline.getBounds() : (pts.length ? L.latLngBounds(pts) : null);
+    if(hasOutline) pts.forEach(p=>bounds.extend(p));
+    if(bounds){
+      map.flyToBounds(bounds.pad(hasOutline?0.08:0.4),
+        {maxZoom:11,duration:1.1,paddingTopLeft:[0,60],paddingBottomRight:[panelPad(),0]});
+    }else{
+      map.flyTo([st.lat,st.lng],6,{duration:1.1});
+    }
   }
 }
 function selectSite(st,i,el){
