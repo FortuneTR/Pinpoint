@@ -709,17 +709,47 @@ loadCityGeoJson();
 // Google-Maps-inspired boundary treatment: a crisp dashed line with rounded
 // joins/caps and a faint fill tint, rather than a solid stroke.
 const BOUNDARY_STYLE = { weight:2.5, opacity:.95, dashArray:'6 4', lineJoin:'round', lineCap:'round' };
+// True area-weighted centroid of a polygon ring (shoelace formula), not just
+// a bounding-box midpoint — a bbox center gets dragged wherever a shape's
+// extremities pull it (e.g. Florida's panhandle drags a bbox center out over
+// the Gulf, off the peninsula entirely). For a Polygon/MultiPolygon feature,
+// this picks the largest sub-polygon by area and centers on that — avoiding
+// e.g. Hawaii's centroid landing in open ocean between separate islands.
+function ringCentroid(ring){
+  let cx=0, cy=0, a=0;
+  for(let i=0;i<ring.length-1;i++){
+    const [x0,y0]=ring[i], [x1,y1]=ring[i+1];
+    const cross = x0*y1 - x1*y0;
+    a += cross; cx += (x0+x1)*cross; cy += (y0+y1)*cross;
+  }
+  a *= 0.5;
+  if(Math.abs(a) < 1e-10) return null;
+  return { lng:cx/(6*a), lat:cy/(6*a), area:Math.abs(a) };
+}
+function largestRingCentroid(geometry){
+  const polygons = geometry.type==='Polygon' ? [geometry.coordinates] : geometry.coordinates;
+  let best = null;
+  polygons.forEach(poly=>{
+    const c = ringCentroid(poly[0]); // poly[0] = outer ring, ignore holes
+    if(c && (!best || c.area>best.area)) best = c;
+  });
+  return best;
+}
 function drawStateOutline(st){
   stateOutline.clearLayers();
-  const drawFallbackCircle = ()=> L.circle([st.lat,st.lng],{
-    ...BOUNDARY_STYLE, radius:180000, color:'#D9A441', fillColor:'#D9A441', fillOpacity:.06
-  }).addTo(stateOutline);
+  const fallbackLatLng = [st.lat,st.lng];
+  const drawFallbackCircle = ()=>{
+    L.circle(fallbackLatLng,{
+      ...BOUNDARY_STYLE, radius:180000, color:'#D9A441', fillColor:'#D9A441', fillOpacity:.06
+    }).addTo(stateOutline);
+    return fallbackLatLng;
+  };
   if(STATE_GEOJSON===null){
     // still loading — draw the approximation now, upgrade to the real
     // polygon if it arrives while this state is still selected
-    drawFallbackCircle();
+    const latlng = drawFallbackCircle();
     loadStateGeoJson().then(()=>{ if(CURRENT_STATE===st) drawStateOutline(st); });
-    return;
+    return latlng;
   }
   const lookupName = GEOJSON_NAME_OVERRIDES[st.name] || st.name;
   const feature = STATE_GEOJSON && STATE_GEOJSON.features &&
@@ -728,8 +758,10 @@ function drawStateOutline(st){
     L.geoJSON(feature,{
       style:{ ...BOUNDARY_STYLE, color:'#D9A441', fillColor:'#D9A441', fillOpacity:.06 }
     }).addTo(stateOutline);
+    const c = largestRingCentroid(feature.geometry);
+    return c ? [c.lat,c.lng] : stateOutline.getBounds().getCenter();
   }else{
-    drawFallbackCircle();
+    return drawFallbackCircle();
   }
 }
 function panelPad(){ return window.innerWidth<=720 ? 0 : 390; }
@@ -939,12 +971,10 @@ function selectState(st, focusIndex, cityFocusIndex){
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   statePinLayer.clearLayers();
   if(map.hasLayer(cityBrowseLayer)) map.removeLayer(cityBrowseLayer); // avoid duplicating cityLayer's own dots below
-  drawStateOutline(st);
-  // Anchor the pin to the real polygon's bounding-box center when we have one,
-  // instead of the seed data's hand-picked lat/lng — that's what puts it near
-  // where the basemap's own "Kansas"-style label actually sits, rather than
-  // an arbitrary point that was only ever a rough guess.
-  const pinLatLng = stateOutline.getLayers().length ? stateOutline.getBounds().getCenter() : [st.lat,st.lng];
+  // Anchor the pin to the real polygon's area-weighted centroid when we have
+  // one, instead of the seed data's hand-picked lat/lng or a bbox midpoint
+  // (which a shape like Florida's panhandle would drag out over the Gulf).
+  const pinLatLng = drawStateOutline(st);
   L.marker(pinLatLng,{icon:statePinIconFn(st.name),title:st.name}).addTo(statePinLayer);
   renderState(st);
   showPanel();
