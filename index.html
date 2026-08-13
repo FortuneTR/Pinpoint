@@ -217,6 +217,15 @@
   .pin svg{display:block;}
   .pin:hover{transform:translateY(-2px) scale(1.08);}
 
+  /* ---- selected-state pushpin + its co-located name caption -------- */
+  .state-pin-wrap{position:absolute;top:0;left:0;transform:translate(-50%,-100%);
+    display:flex;flex-direction:column;align-items:center;pointer-events:none;}
+  .state-pin-wrap svg{display:block;filter:drop-shadow(0 4px 5px rgba(0,0,0,.6));}
+  .state-pin-label{margin-bottom:5px;padding:4px 11px;border-radius:7px;
+    background:rgba(11,16,19,.85);border:1px solid var(--line);color:var(--parch);
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;white-space:nowrap;
+    backdrop-filter:blur(4px);box-shadow:0 4px 12px rgba(0,0,0,.4);}
+
   /* ---- state click targets: no pin, no text — the boundaries/labels
      basemap layer already renders each state's name (with its own,
      better collision handling), so this is just an invisible hit area
@@ -225,6 +234,15 @@
     width:56px;height:30px;border-radius:15px;cursor:pointer;
     background:transparent;transition:background .15s,box-shadow .15s;}
   .state-hit:hover{background:rgba(217,164,65,.16);box-shadow:0 0 0 1px rgba(217,164,65,.5);}
+
+  /* city click targets at the national browse view — same idea as
+     .state-hit, one tier down, tinted city-blue on hover -------------- */
+  .city-hit{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
+    width:16px;height:16px;border-radius:50%;cursor:pointer;
+    background:rgba(111,168,220,.5);border:1px solid rgba(207,227,245,.7);
+    transition:background .15s,box-shadow .15s,transform .15s;}
+  .city-hit:hover{background:rgba(111,168,220,.85);box-shadow:0 0 0 5px rgba(111,168,220,.22);
+    transform:translate(-50%,-50%) scale(1.15);}
 
   .leaflet-popup-content-wrapper{background:var(--ink2);color:var(--parch);
     border:1px solid var(--brass-d);border-radius:10px;}
@@ -515,6 +533,14 @@ const satLabels = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
   { maxZoom:18, opacity:.9, pane:'boundaryLabels', ...TILE_OPTS });
 
+// City browse markers get their own pane above the default markerPane (600) so
+// they always stack above state hit-areas — Leaflet auto-orders markers within
+// the same pane by screen Y-position (further south = higher z-index), which
+// meant a state's own hit-area (centered south of its own seeded city) could
+// silently intercept clicks meant for the city marker sitting north of it.
+map.createPane('cityBrowsePane');
+map.getPane('cityBrowsePane').style.zIndex = 620;
+
 satImagery.addTo(map);
 satLabels.addTo(map);
 let currentBase = 'sat';
@@ -540,6 +566,7 @@ const FAB_ICONS = {
 };
 const panel  = document.getElementById('panel-content');
 let stateLayer = L.layerGroup().addTo(map);
+let cityBrowseLayer = L.layerGroup().addTo(map);
 let siteLayer  = L.layerGroup().addTo(map);
 let cityLayer  = L.layerGroup().addTo(map);
 let cityHighlight = L.layerGroup().addTo(map);
@@ -580,6 +607,10 @@ function siteIndex(st,name){ return (st.sites||[]).findIndex(s=>s.name===name); 
 // here beyond a clickable, hoverable target (see .state-hit CSS).
 const STATE_HIT_ICON = L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,0],
   html:`<span class="state-hit"></span>` });
+// Same idea for cities, so they're clickable straight from the national view
+// instead of only after already being inside their state's dossier.
+const CITY_HIT_ICON = L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,0],
+  html:`<span class="city-hit"></span>` });
 function siteIconFn(){
   return L.divIcon({ className:'', iconSize:[20,30], iconAnchor:[10,30], popupAnchor:[0,-22],
     html:`<div class="pin"><svg width="20" height="30" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
@@ -595,19 +626,41 @@ function cityIconFn(){
         fill="#6FA8DC" stroke="#cfe3f5" stroke-width="1.5"/>
     </svg></div>` });
 }
-function statePinIconFn(){
-  return L.divIcon({ className:'', iconSize:[26,36], iconAnchor:[13,36], popupAnchor:[0,-28],
-    html:`<div class="pin"><svg width="26" height="36" viewBox="0 0 26 36" xmlns="http://www.w3.org/2000/svg">
-      <path d="M13 35.5 L10.7 18 H15.3 Z" fill="#cdd3da" stroke="#9aa2ab" stroke-width=".5"/>
-      <circle cx="13" cy="12" r="11" fill="#D9A441" stroke="#f0c96b" stroke-width="1.5"/>
-      <circle cx="9.2" cy="8.2" r="3" fill="#f4d489" opacity=".7"/>
-    </svg></div>` });
+// Classic map pushpin: a red spherical head on a tapered silver/metallic
+// shaft, point-down at the anchor coordinate. The state name rides along as
+// a caption on the SAME marker (not a separately-positioned map label), so
+// it's aligned with the pin by construction at every zoom level — no more
+// chasing wherever the basemap's own label happens to render.
+function statePinIconFn(name){
+  return L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,0], popupAnchor:[0,-46],
+    html:`<div class="state-pin-wrap">
+      <span class="state-pin-label">${esc(name)}</span>
+      <svg width="20" height="42" viewBox="0 0 20 42" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="pinShaft" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#8a8e93"/>
+            <stop offset="45%" stop-color="#f4f5f7"/>
+            <stop offset="100%" stop-color="#75797e"/>
+          </linearGradient>
+          <radialGradient id="pinHead" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#ff7166"/>
+            <stop offset="55%" stop-color="#e53935"/>
+            <stop offset="100%" stop-color="#a51c18"/>
+          </radialGradient>
+        </defs>
+        <path d="M8.2 17 H11.8 L10.4 41 H9.6 Z" fill="url(#pinShaft)" stroke="#6b6f74" stroke-width=".4"/>
+        <circle cx="10" cy="11" r="11" fill="url(#pinHead)" stroke="#7a1512" stroke-width="1"/>
+        <circle cx="6.6" cy="7.4" r="3" fill="#fff" opacity=".35"/>
+      </svg>
+    </div>` });
 }
 // icons are stateless (no per-marker data baked in) — build once, reuse across
 // every selectState() call instead of allocating a fresh divIcon per marker each time
 const SITE_ICON = siteIconFn();
 const CITY_ICON = cityIconFn();
-const STATE_PIN_ICON = statePinIconFn();
+// statePinIconFn() bakes the state name into the marker, so unlike the other
+// icons it's rebuilt per-selection rather than shared (only one is ever on
+// the map at a time — statePinLayer is cleared before each new selection).
 
 /* ---- real state boundaries: fetched once, cached, drawn on selection --- */
 // Bundled locally (data/us-states.json) rather than fetched from a third-party
@@ -630,6 +683,28 @@ function loadStateGeoJson(){
   return stateGeoJsonPromise;
 }
 loadStateGeoJson(); // kick off in the background at boot so it's usually ready by first selection
+
+/* ---- real city boundaries: bundled for the cities that have one -------- */
+// Sourced from Census TIGER Places (via a per-city GeoJSON mirror), simplified
+// for map-render scale. Coverage is partial — large/consolidated city-county
+// governments (NYC, LA, Nashville, Indianapolis, etc.) aren't in the source
+// data, so those fall back to the circle approximation, same as unmatched
+// states. Matched by {state abbr, city name} since names alone can collide
+// (there's a Portland in both Maine and Oregon).
+const CITY_GEOJSON_URL = 'data/us-cities.json';
+let CITY_GEOJSON = null;
+let cityGeoJsonPromise = null;
+function loadCityGeoJson(){
+  if(!cityGeoJsonPromise){
+    cityGeoJsonPromise = fetch(CITY_GEOJSON_URL).then(r=>{
+      if(!r.ok) throw new Error('city boundary fetch failed: '+r.status);
+      return r.json();
+    }).then(data=>{ CITY_GEOJSON = data; return data; })
+      .catch(err=>{ console.warn('Pinpoint: city boundaries unavailable, falling back to circles.', err); CITY_GEOJSON = false; return null; });
+  }
+  return cityGeoJsonPromise;
+}
+loadCityGeoJson();
 
 // Google-Maps-inspired boundary treatment: a crisp dashed line with rounded
 // joins/caps and a faint fill tint, rather than a solid stroke.
@@ -855,18 +930,22 @@ function renderGallery(container, images){
 
 /* ---- selection flow -------------------------------------------- */
 function selectState(st, focusIndex, cityFocusIndex){
-  setBase('sat');                         // crisp detail when exploring
+  // (no longer forces satellite mode here — that used to silently discard
+  // night mode the instant you selected a state, which also made it look
+  // like the outline "didn't appear" in dark mode: the map had already
+  // flipped back to satellite by the time you saw it.)
   CURRENT_STATE = st;
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   statePinLayer.clearLayers();
+  if(map.hasLayer(cityBrowseLayer)) map.removeLayer(cityBrowseLayer); // avoid duplicating cityLayer's own dots below
   drawStateOutline(st);
   // Anchor the pin to the real polygon's bounding-box center when we have one,
   // instead of the seed data's hand-picked lat/lng — that's what puts it near
   // where the basemap's own "Kansas"-style label actually sits, rather than
   // an arbitrary point that was only ever a rough guess.
   const pinLatLng = stateOutline.getLayers().length ? stateOutline.getBounds().getCenter() : [st.lat,st.lng];
-  L.marker(pinLatLng,{icon:STATE_PIN_ICON,title:st.name}).addTo(statePinLayer);
+  L.marker(pinLatLng,{icon:statePinIconFn(st.name),title:st.name}).addTo(statePinLayer);
   renderState(st);
   showPanel();
   const sites = st.sites||[];
@@ -927,11 +1006,25 @@ function openListItem(i){
 function highlightListItem(i){ cityHighlight.clearLayers(); openListItem(i); }
 
 /* ---- city selection: outline + list sync ------------------------ */
-function drawCityOutline(c){
+function drawCityOutline(c, st){
   cityHighlight.clearLayers();
-  L.circle([c.lat,c.lng],{
+  const drawFallbackCircle = ()=> L.circle([c.lat,c.lng],{
     ...BOUNDARY_STYLE, radius:c.radius||9000, color:'#6FA8DC', fillColor:'#6FA8DC', fillOpacity:.1
   }).addTo(cityHighlight);
+  if(CITY_GEOJSON===null){
+    // still loading — approximate now, upgrade to the real shape if it
+    // arrives while this same state is still selected
+    drawFallbackCircle();
+    loadCityGeoJson().then(()=>{ if(CURRENT_STATE===st) drawCityOutline(c, st); });
+    return;
+  }
+  const feature = CITY_GEOJSON && CITY_GEOJSON.features &&
+    CITY_GEOJSON.features.find(f=>f.properties && f.properties.state===st.abbr && f.properties.name===c.name);
+  if(feature){
+    L.geoJSON(feature,{ style:{ ...BOUNDARY_STYLE, color:'#6FA8DC', fillColor:'#6FA8DC', fillOpacity:.1 } }).addTo(cityHighlight);
+  }else{
+    drawFallbackCircle();
+  }
 }
 function openCityListItem(i){
   const el=panel.querySelector(`.site[data-kind="city"][data-i="${i}"]`); if(!el) return;
@@ -944,12 +1037,12 @@ function selectCityFromList(st,i,el){
   panel.querySelectorAll('.site').forEach(s=>s.classList.remove('open'));
   if(el && !opened) el.classList.add('open');
   else if(!el) openCityListItem(i);
-  drawCityOutline(c);
+  drawCityOutline(c, st);
   map.flyTo([c.lat,c.lng],12,{duration:1});
   const m=cityMarkers[i]; if(m) m.openPopup();
 }
 function highlightCityFromMap(st,i){
-  drawCityOutline(st.cities[i]);
+  drawCityOutline(st.cities[i], st);
   openCityListItem(i);
 }
 function resetToUSA(){
@@ -957,15 +1050,30 @@ function resetToUSA(){
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   statePinLayer.clearLayers(); stateOutline.clearLayers();
+  if(!map.hasLayer(cityBrowseLayer)) cityBrowseLayer.addTo(map);
   map.flyTo(USA_VIEW.center,USA_VIEW.zoom,{duration:1.1});
   renderHome();
   hidePanel();
 }
 
 /* ---- boot ------------------------------------------------------ */
+// Two separate passes, not interleaved: state hit-areas are large (56x30px)
+// and at the national zoom a geographically nearby state's box can extend
+// over a city marker added earlier. Adding every city marker only after
+// every state marker guarantees cities always stack on top and stay
+// clickable, regardless of which state happens to be its geographic neighbor.
 STATES.forEach(st=>{
   L.marker([st.lat,st.lng],{icon:STATE_HIT_ICON,title:st.name})
     .addTo(stateLayer).on('click',()=>selectState(st));
+});
+STATES.forEach(st=>{
+  (st.cities||[]).forEach((c,i)=>{
+    L.marker([c.lat,c.lng],{icon:CITY_HIT_ICON,title:c.name,pane:'cityBrowsePane'})
+      .addTo(cityBrowseLayer).on('click',(e)=>{
+        L.DomEvent.stopPropagation(e); // don't also trigger the state hit-area underneath
+        selectState(st, null, i);
+      });
+  });
 });
 renderHome();
 fab.onclick = ()=>{
