@@ -1167,7 +1167,12 @@ function selectCityFromList(st,i,el){
   if(el && !opened) el.classList.add('open');
   else if(!el) openCityListItem(i);
   drawCityOutline(c, st);
-  map.flyTo([c.lat,c.lng],12,{duration:1});
+  // Plain flyTo centers on the full map div, including the width hidden
+  // behind the sidebar panel — the point ends up off-center in what's
+  // actually visible. flyToBounds with the same panel padding used
+  // elsewhere shifts the true visual center into the unobscured area.
+  map.flyToBounds(L.latLngBounds([c.lat,c.lng],[c.lat,c.lng]),
+    {maxZoom:12,duration:1,paddingTopLeft:[0,60],paddingBottomRight:[panelPad(),0]});
   const m=cityMarkers[i]; if(m) m.openPopup();
 }
 function highlightCityFromMap(st,i){
