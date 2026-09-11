@@ -515,9 +515,15 @@ updateBrandZoom();
 // keepBuffer/updateWhenZooming: keep more offscreen tiles cached and skip
 // mid-zoom tile churn so flyTo/zoom animations don't stutter waiting on network.
 const TILE_OPTS = { updateWhenZooming:false, keepBuffer:4 };
+// Mapbox public token — safe to ship in client-side source *only* because
+// it's restricted to this site's domain in the Mapbox account dashboard
+// (Tokens → this token → URL restrictions). Public "pk." tokens are always
+// visible in page source for any Mapbox web app; the restriction, not
+// secrecy, is what makes that safe.
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2VucGFjaDEiLCJhIjoiY210eGRubnZtMDNrbzJ3b2s3bXJ5dXJtNyJ9.JWOm9iFIxzSvcjyH367U5A';
 const satImagery = L.tileLayer(
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { attribution:'Imagery © Esri, Maxar, Earthstar Geographics', maxZoom:18, ...TILE_OPTS });
+  `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=${MAPBOX_TOKEN}`,
+  { attribution:'Imagery © Mapbox © Maxar', maxZoom:18, ...TILE_OPTS });
 const nightLights = L.tileLayer(
   'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
   { attribution:'Earth at Night © NASA Earth Observatory', maxNativeZoom:8, maxZoom:18, ...TILE_OPTS });
