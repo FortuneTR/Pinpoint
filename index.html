@@ -226,23 +226,17 @@
     font-family:'Inter',sans-serif;font-weight:600;font-size:13px;white-space:nowrap;
     backdrop-filter:blur(4px);box-shadow:0 4px 12px rgba(0,0,0,.4);}
 
-  /* ---- state click targets: no pin, no text — the boundaries/labels
-     basemap layer already renders each state's name (with its own,
-     better collision handling), so this is just an invisible hit area
-     that lights up on hover to confirm it's clickable. -------------- */
-  .state-hit{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
-    width:56px;height:30px;border-radius:15px;cursor:pointer;
-    background:transparent;transition:background .15s,box-shadow .15s;}
-  .state-hit:hover{background:rgba(217,164,65,.16);box-shadow:0 0 0 1px rgba(217,164,65,.5);}
-
-  /* city click targets at the national browse view — same idea as
-     .state-hit, one tier down, tinted city-blue on hover -------------- */
-  .city-hit{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
-    width:16px;height:16px;border-radius:50%;cursor:pointer;
-    background:rgba(111,168,220,.5);border:1px solid rgba(207,227,245,.7);
-    transition:background .15s,box-shadow .15s,transform .15s;}
-  .city-hit:hover{background:rgba(111,168,220,.85);box-shadow:0 0 0 5px rgba(111,168,220,.22);
-    transform:translate(-50%,-50%) scale(1.15);}
+  /* ---- state/city names as clickable hyperlink-style text, in place of
+     an invisible pin/oval hit area -------------------------------------- */
+  .map-link{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
+    font-family:'Inter',sans-serif;font-weight:600;white-space:nowrap;
+    cursor:pointer;user-select:none;text-decoration:underline;text-underline-offset:3px;
+    text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 8px rgba(0,0,0,.7),0 0 2px rgba(0,0,0,.9);
+    transition:color .15s,text-decoration-color .15s;}
+  .map-link.state-link{font-size:14px;color:var(--brass);text-decoration-color:rgba(217,164,65,.55);}
+  .map-link.state-link:hover{color:#f0c96b;text-decoration-color:#f0c96b;}
+  .map-link.city-link{font-size:12.5px;color:var(--city);text-decoration-color:rgba(111,168,220,.55);}
+  .map-link.city-link:hover{color:#a9cdec;text-decoration-color:#a9cdec;}
 
   .leaflet-popup-content-wrapper{background:var(--ink2);color:var(--parch);
     border:1px solid var(--brass-d);border-radius:10px;}
@@ -572,7 +566,6 @@ const FAB_ICONS = {
 };
 const panel  = document.getElementById('panel-content');
 let stateLayer = L.layerGroup().addTo(map);
-let cityBrowseLayer = L.layerGroup().addTo(map);
 let siteLayer  = L.layerGroup().addTo(map);
 let cityLayer  = L.layerGroup().addTo(map);
 let cityHighlight = L.layerGroup().addTo(map);
@@ -608,15 +601,13 @@ const PICKS = [
 const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const byAbbr = a => STATES.find(s=>s.abbr===a);
 function siteIndex(st,name){ return (st.sites||[]).findIndex(s=>s.name===name); }
-// A single shared invisible-hit-area icon — the basemap's own boundaries/
-// labels layer already draws the state's name, so there's nothing to render
-// here beyond a clickable, hoverable target (see .state-hit CSS).
-const STATE_HIT_ICON = L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,0],
-  html:`<span class="state-hit"></span>` });
-// Same idea for cities, so they're clickable straight from the national view
-// instead of only after already being inside their state's dossier.
-const CITY_HIT_ICON = L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,0],
-  html:`<span class="city-hit"></span>` });
+// State name as a clickable hyperlink-style text label instead of an
+// invisible pin/oval — dx/dy (screen px) nudge apart the crowded Northeast
+// cluster, same idea as the earlier text-label approach.
+function stateLinkIcon(name,dx,dy){
+  return L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[-(dx||0),-(dy||0)],
+    html:`<span class="map-link state-link">${esc(name)}</span>` });
+}
 function siteIconFn(){
   return L.divIcon({ className:'', iconSize:[20,30], iconAnchor:[10,30], popupAnchor:[0,-22],
     html:`<div class="pin"><svg width="20" height="30" viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
@@ -625,12 +616,10 @@ function siteIconFn(){
       <circle cx="7.4" cy="6.4" r="2.2" fill="#bff0ea" opacity=".65"/>
     </svg></div>` });
 }
-function cityIconFn(){
-  return L.divIcon({ className:'', iconSize:[16,16], iconAnchor:[8,8], popupAnchor:[0,-8],
-    html:`<div class="pin"><svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="2" width="12" height="12" rx="3" transform="rotate(45 8 8)"
-        fill="#6FA8DC" stroke="#cfe3f5" stroke-width="1.5"/>
-    </svg></div>` });
+// City name as a clickable hyperlink-style text label, same idea as states.
+function cityLinkIcon(name){
+  return L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,0],
+    html:`<span class="map-link city-link">${esc(name)}</span>` });
 }
 // Classic map pushpin: a red spherical head on a tapered silver/metallic
 // shaft, point-down at the anchor coordinate. The state name rides along as
@@ -660,10 +649,11 @@ function statePinIconFn(name){
       </svg>
     </div>` });
 }
-// icons are stateless (no per-marker data baked in) — build once, reuse across
-// every selectState() call instead of allocating a fresh divIcon per marker each time
+// SITE_ICON is stateless (no per-marker data baked in) — build once, reuse
+// across every selectState() call instead of allocating a fresh divIcon per
+// marker each time. cityLinkIcon()/stateLinkIcon() bake the name into the
+// marker, so those are built fresh per-marker instead (see call sites).
 const SITE_ICON = siteIconFn();
-const CITY_ICON = cityIconFn();
 // statePinIconFn() bakes the state name into the marker, so unlike the other
 // icons it's rebuilt per-selection rather than shared (only one is ever on
 // the map at a time — statePinLayer is cleared before each new selection).
@@ -976,7 +966,6 @@ function selectState(st, focusIndex, cityFocusIndex){
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   statePinLayer.clearLayers();
-  if(map.hasLayer(cityBrowseLayer)) map.removeLayer(cityBrowseLayer); // avoid duplicating cityLayer's own dots below
   // Anchor the pin to the real polygon's area-weighted centroid when we have
   // one, instead of the seed data's hand-picked lat/lng or a bbox midpoint
   // (which a shape like Florida's panhandle would drag out over the Gulf).
@@ -998,7 +987,7 @@ function selectState(st, focusIndex, cityFocusIndex){
     siteMarkers[i]=m; pts.push([s.lat,s.lng]);
   });
   cities.forEach((c,i)=>{
-    const m=L.marker([c.lat,c.lng],{icon:CITY_ICON}).addTo(cityLayer)
+    const m=L.marker([c.lat,c.lng],{icon:cityLinkIcon(c.name)}).addTo(cityLayer)
       .bindPopup(`<div class="pop-name">${esc(c.name)}</div>
                   <div class="pop-est">Founded ${esc(c.founded)}</div>
                   <div class="pop-body">${esc(c.fact)}</div>`,{maxWidth:260});
@@ -1086,30 +1075,23 @@ function resetToUSA(){
   siteLayer.clearLayers(); siteMarkers={};
   cityLayer.clearLayers(); cityMarkers={}; cityHighlight.clearLayers();
   statePinLayer.clearLayers(); stateOutline.clearLayers();
-  if(!map.hasLayer(cityBrowseLayer)) cityBrowseLayer.addTo(map);
   map.flyTo(USA_VIEW.center,USA_VIEW.zoom,{duration:1.1});
   renderHome();
   hidePanel();
 }
 
 /* ---- boot ------------------------------------------------------ */
-// Two separate passes, not interleaved: state hit-areas are large (56x30px)
-// and at the national zoom a geographically nearby state's box can extend
-// over a city marker added earlier. Adding every city marker only after
-// every state marker guarantees cities always stack on top and stay
-// clickable, regardless of which state happens to be its geographic neighbor.
+// The small Northeast states sit close enough together at the national
+// view that their text labels collide; nudge them apart (screen pixels).
+const LABEL_NUDGE = {
+  VT:[-16,-20], NH:[18,-14], MA:[26,-2], RI:[34,16], CT:[2,20],
+  NJ:[24,20], DE:[34,12], MD:[-4,32], DC:[36,60], WV:[-42,-18], VA:[8,-16],
+  OH:[-6,-22], IL:[-14,-6], IN:[10,10], MS:[-26,-6], AL:[22,14]
+};
 STATES.forEach(st=>{
-  L.marker([st.lat,st.lng],{icon:STATE_HIT_ICON,title:st.name})
+  const [dx,dy] = LABEL_NUDGE[st.abbr] || [0,0];
+  L.marker([st.lat,st.lng],{icon:stateLinkIcon(st.name,dx,dy),title:st.name})
     .addTo(stateLayer).on('click',()=>selectState(st));
-});
-STATES.forEach(st=>{
-  (st.cities||[]).forEach((c,i)=>{
-    L.marker([c.lat,c.lng],{icon:CITY_HIT_ICON,title:c.name,pane:'cityBrowsePane'})
-      .addTo(cityBrowseLayer).on('click',(e)=>{
-        L.DomEvent.stopPropagation(e); // don't also trigger the state hit-area underneath
-        selectState(st, null, i);
-      });
-  });
 });
 renderHome();
 fab.onclick = ()=>{
