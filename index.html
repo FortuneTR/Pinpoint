@@ -535,27 +535,16 @@ const nightLights = L.tileLayer(
   'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
   { attribution:'Earth at Night © NASA Earth Observatory', maxNativeZoom:8, maxZoom:18, ...TILE_OPTS });
 
-// Boundaries/place-name reference layer lives in its own pane, above BOTH base
-// imagery layers, and is never removed — previously it only rode along inside
-// the satellite layer group, so it vanished entirely in night mode, leaving no
-// state lines at all. Now state/country outlines stay visible in either mode.
-map.createPane('boundaryLabels');
-map.getPane('boundaryLabels').style.zIndex = 350;
-map.getPane('boundaryLabels').style.pointerEvents = 'none';
-const satLabels = L.tileLayer(
-  'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-  { maxZoom:18, opacity:.9, pane:'boundaryLabels', ...TILE_OPTS });
-
-// City browse markers get their own pane above the default markerPane (600) so
-// they always stack above state hit-areas — Leaflet auto-orders markers within
-// the same pane by screen Y-position (further south = higher z-index), which
-// meant a state's own hit-area (centered south of its own seeded city) could
-// silently intercept clicks meant for the city marker sitting north of it.
-map.createPane('cityBrowsePane');
-map.getPane('cityBrowsePane').style.zIndex = 620;
+// State lines at the national view used to come from an Esri raster tile
+// (World_Boundaries_and_Places) so they'd survive night mode — but that tile
+// bakes its own place-name labels (state AND city names) right into the
+// image, which duplicated our own clickable name labels and looked cluttered.
+// We already have the real state polygons bundled locally, so draw borders
+// ourselves — no text, just lines — and they work in both modes for free.
+// (Populated once loadStateGeoJson() is defined further down — see boot.)
+let nationalBorders = L.layerGroup().addTo(map);
 
 satImagery.addTo(map);
-satLabels.addTo(map);
 let currentBase = 'sat';
 function setBase(mode){
   if(mode===currentBase) return;
@@ -691,7 +680,11 @@ function loadStateGeoJson(){
   }
   return stateGeoJsonPromise;
 }
-loadStateGeoJson(); // kick off in the background at boot so it's usually ready by first selection
+loadStateGeoJson().then(data=>{ // kick off in the background at boot so it's usually ready by first selection
+  if(!data || !data.features) return;
+  L.geoJSON(data, { style:{ weight:1, opacity:.4, color:'#e7e2d3', fill:false } })
+    .addTo(nationalBorders);
+});
 
 /* ---- real city boundaries: bundled for the cities that have one -------- */
 // Sourced from Census TIGER Places (via a per-city GeoJSON mirror), simplified
@@ -934,6 +927,15 @@ const TRAVEL_CATEGORIES = [
   { label:'Parks',             match:t=>t.leisure==='park' },
   { label:'Movie Theaters',    match:t=>t.amenity==='cinema' },
 ];
+// The free public Overpass instances are shared, volunteer-run resources —
+// any one of them can be slow, rate-limiting, or briefly down. Try a short
+// list of independent mirrors in order rather than failing the whole feature
+// the moment the first one has a bad moment.
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.osm.ch/api/interpreter',
+];
 async function loadTravelData(container, c){
   const key = `${c.lat},${c.lng}`;
   if(TRAVEL_CACHE[key]){ renderTravelList(container, TRAVEL_CACHE[key]); return; }
@@ -947,20 +949,27 @@ async function loadTravelData(container, c){
     node["amenity"="cinema"](around:4000,${c.lat},${c.lng});
     node["leisure"="park"](around:4000,${c.lat},${c.lng});
   );out body 80;`;
-  try{
-    const res = await fetch('https://overpass-api.de/api/interpreter', {
-      method:'POST', body:'data='+encodeURIComponent(query)
-    });
-    if(!res.ok) throw new Error('overpass fetch failed: '+res.status);
-    const data = await res.json();
-    const named = (data.elements||[]).filter(el=>el.tags && el.tags.name);
-    TRAVEL_CACHE[key] = named;
-    renderTravelList(container, named);
-  }catch(e){
-    console.warn('Pinpoint: travel listings unavailable.', e);
-    TRAVEL_CACHE[key] = [];
-    container.innerHTML = `<div class="travel-status">Couldn’t load nearby places right now.</div>`;
+  let lastErr = null;
+  for(const endpoint of OVERPASS_ENDPOINTS){
+    try{
+      const res = await fetch(endpoint, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+        body:'data='+encodeURIComponent(query)
+      });
+      if(!res.ok) throw new Error('overpass fetch failed: '+res.status+' from '+endpoint);
+      const data = await res.json();
+      const named = (data.elements||[]).filter(el=>el.tags && el.tags.name);
+      TRAVEL_CACHE[key] = named;
+      renderTravelList(container, named);
+      return;
+    }catch(e){
+      lastErr = e;
+    }
   }
+  console.warn('Pinpoint: travel listings unavailable.', lastErr);
+  TRAVEL_CACHE[key] = [];
+  container.innerHTML = `<div class="travel-status">Couldn’t load nearby places right now.</div>`;
 }
 function renderTravelList(container, elements){
   const groups = TRAVEL_CATEGORIES
