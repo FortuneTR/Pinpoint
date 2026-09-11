@@ -247,6 +247,19 @@
     letter-spacing:1px;margin-bottom:8px;}
   .pop-body{font-size:12.5px;line-height:1.55;color:#cdd6da;max-width:268px;margin-top:8px;}
   .leaflet-popup-content .gallery{margin-top:8px;}
+  .pop-tabs{display:flex;gap:4px;margin-top:8px;border-bottom:1px solid var(--line);}
+  .pop-tab{background:none;border:none;color:var(--mute);font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;padding:6px 4px 8px;
+    cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+  .pop-tab.active{color:var(--brass);border-bottom-color:var(--brass);}
+  .pop-tab:hover:not(.active){color:var(--parch);}
+  .pop-tabpanel[hidden]{display:none;}
+  .travel-list{max-width:268px;margin-top:8px;}
+  .travel-cat{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;
+    color:var(--brass);text-transform:uppercase;margin:10px 0 4px;}
+  .travel-cat:first-child{margin-top:0;}
+  .travel-item{font-size:12.5px;line-height:1.5;color:#cdd6da;padding-left:2px;}
+  .travel-status{font-size:11.5px;color:var(--mute);padding:10px 0;}
   .leaflet-container{background:#060a0d;}
   .leaflet-bar a{background:var(--ink2);color:var(--parch);border-color:var(--line);}
   .leaflet-bar a:hover{background:var(--line);}
@@ -890,6 +903,78 @@ function ensureGalleryPopup(marker, s){
   g.dataset.loaded = '1';
   loadGalleryImages(g, s.wiki||s.name, s.name);
 }
+
+/* ---- city popup Facts/Travel tabs -------------------------------- */
+function wireCityPopupTabs(marker, c){
+  const popupEl = marker.getPopup() && marker.getPopup().getElement();
+  if(!popupEl || popupEl.dataset.tabsWired==='1') return;
+  popupEl.dataset.tabsWired = '1';
+  const tabs = popupEl.querySelectorAll('.pop-tab');
+  const panels = popupEl.querySelectorAll('.pop-tabpanel');
+  tabs.forEach(tab=>{
+    tab.onclick = ()=>{
+      tabs.forEach(t=>t.classList.toggle('active', t===tab));
+      panels.forEach(p=>{ p.hidden = p.dataset.panel !== tab.dataset.tab; });
+      if(tab.dataset.tab==='travel'){
+        const list = popupEl.querySelector('.travel-list');
+        if(list.dataset.loaded!=='1'){ list.dataset.loaded='1'; loadTravelData(list, c); }
+      }
+    };
+  });
+}
+// Restaurants/bars/parks/theaters go stale the moment a place closes or
+// changes hands — rather than hand-write listings that would rot immediately,
+// fetch real, current places from OpenStreetMap's free Overpass API, the same
+// "live rather than fabricated" approach used for photos and boundaries.
+const TRAVEL_CACHE = {};
+const TRAVEL_CATEGORIES = [
+  { label:'Restaurants',       match:t=>t.amenity==='restaurant' },
+  { label:'Bars',              match:t=>t.amenity==='bar'||t.amenity==='pub' },
+  { label:'Cafes & Hangouts',  match:t=>t.amenity==='cafe'||t.amenity==='nightclub' },
+  { label:'Parks',             match:t=>t.leisure==='park' },
+  { label:'Movie Theaters',    match:t=>t.amenity==='cinema' },
+];
+async function loadTravelData(container, c){
+  const key = `${c.lat},${c.lng}`;
+  if(TRAVEL_CACHE[key]){ renderTravelList(container, TRAVEL_CACHE[key]); return; }
+  container.innerHTML = `<div class="travel-status">Finding nearby places…</div>`;
+  const query = `[out:json][timeout:25];(
+    node["amenity"="restaurant"](around:4000,${c.lat},${c.lng});
+    node["amenity"="bar"](around:4000,${c.lat},${c.lng});
+    node["amenity"="pub"](around:4000,${c.lat},${c.lng});
+    node["amenity"="cafe"](around:4000,${c.lat},${c.lng});
+    node["amenity"="nightclub"](around:4000,${c.lat},${c.lng});
+    node["amenity"="cinema"](around:4000,${c.lat},${c.lng});
+    node["leisure"="park"](around:4000,${c.lat},${c.lng});
+  );out body 80;`;
+  try{
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method:'POST', body:'data='+encodeURIComponent(query)
+    });
+    if(!res.ok) throw new Error('overpass fetch failed: '+res.status);
+    const data = await res.json();
+    const named = (data.elements||[]).filter(el=>el.tags && el.tags.name);
+    TRAVEL_CACHE[key] = named;
+    renderTravelList(container, named);
+  }catch(e){
+    console.warn('Pinpoint: travel listings unavailable.', e);
+    TRAVEL_CACHE[key] = [];
+    container.innerHTML = `<div class="travel-status">Couldn’t load nearby places right now.</div>`;
+  }
+}
+function renderTravelList(container, elements){
+  const groups = TRAVEL_CATEGORIES
+    .map(cat=>({ label:cat.label, items:elements.filter(el=>cat.match(el.tags)).slice(0,6) }))
+    .filter(g=>g.items.length);
+  if(!groups.length){
+    container.innerHTML = `<div class="travel-status">No nearby listings found yet.</div>`;
+    return;
+  }
+  container.innerHTML = groups.map(g=>`
+    <div class="travel-cat">${esc(g.label)}</div>
+    ${g.items.map(it=>`<div class="travel-item">${esc(it.tags.name)}</div>`).join('')}
+  `).join('');
+}
 // Wikipedia's media-list mixes real photos of the subject in with maps, seals,
 // locator diagrams, and flag icons pulled from infoboxes — filter those out so
 // the majority of what's shown is actually a picture of the site itself.
@@ -990,8 +1075,18 @@ function selectState(st, focusIndex, cityFocusIndex){
     const m=L.marker([c.lat,c.lng],{icon:cityLinkIcon(c.name)}).addTo(cityLayer)
       .bindPopup(`<div class="pop-name">${esc(c.name)}</div>
                   <div class="pop-est">Founded ${esc(c.founded)}</div>
-                  <div class="pop-body">${esc(c.fact)}</div>`,{maxWidth:260});
+                  <div class="pop-tabs">
+                    <button class="pop-tab active" data-tab="facts">Facts</button>
+                    <button class="pop-tab" data-tab="travel">Travel</button>
+                  </div>
+                  <div class="pop-tabpanel" data-panel="facts">
+                    <div class="pop-body">${esc(c.fact)}</div>
+                  </div>
+                  <div class="pop-tabpanel" data-panel="travel" hidden>
+                    <div class="travel-list" data-loaded="0"></div>
+                  </div>`,{maxWidth:280,minWidth:250});
     m.on('click',()=>highlightCityFromMap(st,i));
+    m.on('popupopen',()=>wireCityPopupTabs(m,c));
     cityMarkers[i]=m; pts.push([c.lat,c.lng]);
   });
   if(focusIndex!=null && sites[focusIndex]){
