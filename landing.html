@@ -40,16 +40,13 @@
   .stage{position:static;}
   .frame{position:relative;min-height:100vh;overflow:hidden;}
 
-  /* ---- scene 1: sky + clouds + headline ---------------------------- */
-  .frame-sky{background:var(--sky-horizon);display:flex;align-items:center;justify-content:center;}
-  .sky-day,.sky-night{position:absolute;inset:0;}
-  .sky-day{background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 38%,var(--sky-low) 72%,var(--sky-horizon) 100%);opacity:1;}
-  .sky-night{background:linear-gradient(180deg,#05080a 0%,var(--ink) 55%,var(--ink2) 100%);opacity:0;}
+  /* ---- shared sky background: both scenes live in the same blue-sky
+     world, so this single gradient backs the whole journey — no
+     day-to-night crossfade any more. ------------------------------- */
+  .sky-bg{background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 38%,var(--sky-low) 72%,var(--sky-horizon) 100%);}
 
-  .stars{position:absolute;inset:0;opacity:0;pointer-events:none;}
-  .star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
-    animation:twinkle 3.4s ease-in-out infinite;}
-  @keyframes twinkle{0%,100%{opacity:.25;}50%{opacity:1;}}
+  /* ---- scene 1: sky + clouds + headline ---------------------------- */
+  .frame-sky{display:flex;align-items:center;justify-content:center;}
 
   .clouds{position:absolute;inset:0;pointer-events:none;}
   .cloud-wrap{position:absolute;}
@@ -84,7 +81,13 @@
   .cloud-6{left:48%;top:52%;animation-delay:-11s;}
   .cloud-6 .cloud{animation-duration:29s;}
 
-  .hero-text{position:relative;z-index:5;text-align:center;padding:0 20px;max-width:1000px;}
+  /* pointer-events:none unconditionally: hero-text has no interactive
+     children, and in cinematic mode it fades to opacity:0 but stays laid
+     out in the same centered spot as the scene-2 gateway card — without
+     this, the invisible headline would still intercept clicks meant for
+     the search input/buttons underneath it. */
+  .hero-text{position:relative;z-index:5;text-align:center;padding:0 20px;
+    max-width:1000px;pointer-events:none;}
   .scroll-hint{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;
     text-transform:uppercase;color:rgba(255,255,255,.85);margin:0 0 18px;
     text-shadow:0 2px 10px rgba(10,30,50,.4);animation:bob 1.8s ease-in-out infinite;}
@@ -97,39 +100,40 @@
   .subtitle{margin:18px 0 0;font-size:clamp(16px,3.2vw,26px);font-weight:500;
     color:rgba(255,255,255,.95);text-shadow:0 4px 18px rgba(11,16,19,.3);}
 
-  /* ---- scene 2: clouds part, atlas destination arrives -------------- */
-  .frame-map{background:linear-gradient(180deg,#05080a 0%,var(--ink) 55%,var(--ink2) 100%);
-    display:flex;align-items:center;justify-content:center;flex-direction:column;
-    gap:clamp(18px,4vh,36px);padding:48px 20px;text-align:center;}
+  /* ---- scene 2: same sky, a real entry point into the app ----------- */
+  .frame-map{display:flex;align-items:center;justify-content:center;padding:24px 20px;}
 
-  .map-scene{position:relative;width:min(92vw,760px);aspect-ratio:16/10;
-    border-radius:18px;overflow:hidden;background:var(--ink2);
-    border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5);}
-  .map-scene svg{position:absolute;inset:0;width:100%;height:100%;}
-  .map-grid line{stroke:var(--line);stroke-width:1;opacity:.6;}
-  .map-contour{fill:none;stroke:var(--teal);stroke-width:1.4;opacity:.35;}
-  .map-contour.alt{stroke:var(--brass);opacity:.28;}
-  .map-land{fill:url(#landGrad);opacity:.9;}
-  .pin{animation:pulse 2.6s ease-in-out infinite;}
-  .pin.t2{animation-delay:.4s;}
-  .pin.t3{animation-delay:.9s;}
-  .pin.t4{animation-delay:1.3s;}
-  .pin.t5{animation-delay:1.7s;}
-  @keyframes pulse{
-    0%{opacity:.35;r:7;}
-    50%{opacity:1;r:4.2;}
-    100%{opacity:.35;r:7;}
-  }
+  .gateway{width:min(92vw,480px);background:rgba(255,255,255,.26);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,.55);border-radius:28px;
+    padding:clamp(26px,5vw,40px) clamp(22px,5vw,36px);text-align:center;
+    box-shadow:0 26px 60px rgba(13,55,100,.25);}
 
-  .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;
-    text-transform:uppercase;color:var(--mute);margin:0;}
-  .wordmark{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(34px,7vw,64px);
-    margin:2px 0 0;color:var(--parch);letter-spacing:.5px;}
-  .wordmark span{color:var(--brass);}
-  .tagline{margin:0;color:var(--mute);font-family:'IBM Plex Mono',monospace;
-    font-size:clamp(11px,1.6vw,13px);letter-spacing:1px;}
+  .gateway .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;
+    text-transform:uppercase;color:rgba(11,16,19,.6);margin:0 0 16px;}
 
-  .cta-btn{display:inline-block;margin-top:6px;padding:16px 34px;border-radius:999px;
+  .place-form{display:flex;flex-wrap:wrap;gap:10px;}
+  .place-input{flex:1 1 200px;min-width:0;padding:14px 18px;border-radius:999px;
+    border:1px solid rgba(11,16,19,.14);background:#fff;color:var(--ink);
+    font-family:'Fredoka',sans-serif;font-size:16px;outline:none;
+    transition:box-shadow .2s ease,border-color .2s ease;}
+  .place-input::placeholder{color:#6b7f8c;}
+  .place-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(79,176,165,.28);}
+  .place-submit{flex:0 0 auto;padding:14px 22px;border-radius:999px;border:none;
+    background:var(--ink);color:#fff;font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:15px;cursor:pointer;transition:background .2s ease,transform .2s ease;}
+  .place-submit:hover{background:var(--ink2);transform:translateY(-1px);}
+  .place-submit:active{transform:translateY(0);}
+
+  .hint{margin:12px 0 0;font-size:11.5px;color:rgba(11,16,19,.55);
+    font-family:'IBM Plex Mono',monospace;letter-spacing:.3px;}
+
+  .or-divider{display:flex;align-items:center;gap:12px;margin:22px 0;
+    color:rgba(11,16,19,.5);font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:2px;text-transform:uppercase;}
+  .or-divider:before,.or-divider:after{content:"";flex:1;height:1px;background:rgba(11,16,19,.18);}
+
+  .cta-btn{display:inline-block;padding:16px 34px;border-radius:999px;width:100%;
     background:var(--brass);color:#1a1206;text-decoration:none;font-weight:700;
     font-family:'Fredoka',sans-serif;font-size:clamp(16px,2.4vw,19px);letter-spacing:.3px;
     box-shadow:0 14px 34px rgba(217,164,65,.35);transition:transform .2s ease,box-shadow .2s ease,background .2s ease;}
@@ -151,10 +155,6 @@
   html.js-cinematic .stage{position:sticky;top:0;height:100vh;}
   html.js-cinematic .frame{position:absolute;inset:0;min-height:0;}
 
-  html.js-cinematic .sky-day{opacity:calc(1 - var(--pSky,0));}
-  html.js-cinematic .sky-night{opacity:var(--pSky,0);}
-  html.js-cinematic .stars{opacity:var(--pSky,0);}
-
   html.js-cinematic .scroll-hint{opacity:calc(1 - var(--pHint,0));}
   html.js-cinematic .headline{
     opacity:calc(1 - var(--pHeadline,0));
@@ -170,24 +170,17 @@
       calc(var(--pClouds,0) * -1 * (90px + var(--depth,1) * 160px)))
       scale(calc(1 + var(--pClouds,0) * 0.35));
   }
-  /* frame-map paints over frame-sky (later sibling, same absolute box), so
-     its own background must stay transparent in cinematic mode — the sky's
-     day/night crossfade (living in frame-sky) shows through underneath,
-     and only frame-map's own content (map/kicker/wordmark/cta) fades in. */
-  html.js-cinematic .frame-map{background:transparent;}
-  html.js-cinematic .map-scene{
-    opacity:var(--pMap,0);
-    transform:scale(calc(1.08 - var(--pMap,0) * 0.08)) translateY(calc((1 - var(--pMap,0)) * 24px));
-  }
-  html.js-cinematic .kicker,
-  html.js-cinematic .wordmark,
-  html.js-cinematic .tagline{
-    opacity:var(--pMap,0);
-    transform:translateY(calc((1 - var(--pMap,0)) * 16px));
+  /* frame-map is a later sibling stacked over frame-sky at the same box;
+     both already share the .sky-bg gradient, so there's nothing to
+     crossfade here — only frame-map's own content (the gateway card)
+     needs to fade/settle in as it's scrolled to. */
+  html.js-cinematic .gateway{
+    opacity:var(--pGateway,0);
+    transform:scale(calc(0.96 + var(--pGateway,0) * 0.04)) translateY(calc((1 - var(--pGateway,0)) * 28px));
   }
   html.js-cinematic .cta-btn{
     opacity:var(--pCta,0);
-    transform:translateY(calc((1 - var(--pCta,0)) * 18px));
+    transform:translateY(calc((1 - var(--pCta,0)) * 14px));
     pointer-events:auto;
   }
 
@@ -195,12 +188,17 @@
   @media (prefers-reduced-motion: reduce){
     .cloud{animation:none;}
     .scroll-hint{animation:none;}
-    .pin{animation:none;}
   }
 
   @media (max-width:480px){
-    .map-scene{aspect-ratio:4/5;}
     .headline{letter-spacing:0;}
+    /* .place-form switches to a column; .place-input's row-mode
+       "flex:1 1 200px" would otherwise apply that 200px basis to HEIGHT
+       (the column's main axis), ballooning it into a huge pill. Reset
+       both children to natural auto-height, full-width stacking. */
+    .place-form{flex-direction:column;}
+    .place-input{flex:0 0 auto;width:100%;}
+    .place-submit{flex:0 0 auto;width:100%;}
   }
 </style>
 </head>
@@ -209,11 +207,7 @@
 <div class="wrapper">
   <div class="stage">
 
-    <section class="frame frame-sky" aria-label="Opening scene: blue sky">
-      <div class="sky-day"></div>
-      <div class="sky-night"></div>
-      <div class="stars" aria-hidden="true"></div>
-
+    <section class="frame frame-sky sky-bg" aria-label="Opening scene: blue sky">
       <div class="clouds" aria-hidden="true">
         <div class="cloud-wrap cloud-1" style="--depth:0.4;--dx:-160px;"><div class="cloud cloud--a"></div></div>
         <div class="cloud-wrap cloud-2" style="--depth:0.9;--dx:180px;"><div class="cloud cloud--b"></div></div>
@@ -230,48 +224,22 @@
       </div>
     </section>
 
-    <section class="frame frame-map" aria-label="Destination: the Pinpoint atlas">
-      <div class="map-scene" aria-hidden="true">
-        <svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <radialGradient id="landGrad" cx="45%" cy="40%" r="70%">
-              <stop offset="0%" stop-color="#1b2a33"/>
-              <stop offset="100%" stop-color="#0f171c"/>
-            </radialGradient>
-          </defs>
-          <g class="map-grid">
-            <line x1="0" y1="42" x2="400" y2="42"/>
-            <line x1="0" y1="84" x2="400" y2="84"/>
-            <line x1="0" y1="126" x2="400" y2="126"/>
-            <line x1="0" y1="168" x2="400" y2="168"/>
-            <line x1="0" y1="210" x2="400" y2="210"/>
-            <line x1="50" y1="0" x2="50" y2="250"/>
-            <line x1="100" y1="0" x2="100" y2="250"/>
-            <line x1="150" y1="0" x2="150" y2="250"/>
-            <line x1="200" y1="0" x2="200" y2="250"/>
-            <line x1="250" y1="0" x2="250" y2="250"/>
-            <line x1="300" y1="0" x2="300" y2="250"/>
-            <line x1="350" y1="0" x2="350" y2="250"/>
-          </g>
-          <path class="map-land" d="M40,90 C60,50 130,35 190,45 C250,55 300,40 340,70
-            C370,95 360,140 320,160 C330,190 290,215 240,205 C200,225 140,220 120,195
-            C80,200 45,170 55,135 C30,125 25,105 40,90 Z"/>
-          <path class="map-contour" d="M70,100 C120,80 220,80 300,100 C330,108 340,130 310,140 C250,120 150,122 100,140 C75,130 60,112 70,100 Z"/>
-          <path class="map-contour alt" d="M90,150 C150,140 240,142 290,160 C270,180 190,188 140,180 C110,178 95,165 90,150 Z"/>
-          <g class="pins">
-            <circle class="pin t1" cx="110" cy="100" r="5" fill="#D9A441"/>
-            <circle class="pin t2" cx="210" cy="90" r="5" fill="#4FB0A5"/>
-            <circle class="pin t3" cx="260" cy="130" r="5" fill="#D9A441"/>
-            <circle class="pin t4" cx="150" cy="160" r="5" fill="#4FB0A5"/>
-            <circle class="pin t5" cx="310" cy="105" r="5" fill="#6FA8DC"/>
-          </g>
-        </svg>
-      </div>
+    <section class="frame frame-map sky-bg" aria-label="Enter the atlas">
+      <div class="gateway">
+        <p class="kicker">Know where you're headed?</p>
 
-      <p class="kicker">Arriving at</p>
-      <h2 class="wordmark">Pin<span>point</span></h2>
-      <p class="tagline">AN INTERACTIVE ATLAS OF THE UNITED STATES</p>
-      <a class="cta-btn" href="index.html">Enter the Atlas →</a>
+        <form class="place-form" action="index.html" method="GET">
+          <input type="text" name="place" class="place-input"
+            placeholder="Enter a state, city, or town…" autocomplete="off"
+            aria-label="Enter a state, city, or town">
+          <button type="submit" class="place-submit">Search →</button>
+        </form>
+        <p class="hint">We'll drop you into the map — find it there.</p>
+
+        <div class="or-divider" aria-hidden="true">or</div>
+
+        <a class="cta-btn" href="index.html">See Map →</a>
+      </div>
     </section>
 
   </div>
@@ -284,21 +252,6 @@
 
 <script>
 (function(){
-  // Scatter a handful of stars once, reused by the night sky.
-  var starsEl = document.querySelector('.stars');
-  if (starsEl){
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < 60; i++){
-      var s = document.createElement('div');
-      s.className = 'star';
-      s.style.left = (Math.random()*100) + '%';
-      s.style.top = (Math.random()*70) + '%';
-      s.style.animationDelay = (Math.random()*3) + 's';
-      frag.appendChild(s);
-    }
-    starsEl.appendChild(frag);
-  }
-
   var prefersReduced = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -330,8 +283,7 @@
     var subExit = remap(p, 0.50, 0.63);
     root.setProperty('--pSub', Math.max(0, subEnter - subExit));
 
-    root.setProperty('--pSky', remap(p, 0.45, 0.78));
-    root.setProperty('--pMap', remap(p, 0.55, 0.85));
+    root.setProperty('--pGateway', remap(p, 0.55, 0.85));
     root.setProperty('--pCta', remap(p, 0.82, 1.0));
   }
 
