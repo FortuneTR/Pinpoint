@@ -205,6 +205,61 @@
     .place-submit{flex:0 0 auto;width:100%;padding:10px 16px;}
     .gateway{padding:clamp(20px,5vw,28px) clamp(18px,5vw,26px);}
   }
+
+  /* ===================================================================
+     "See Map" globe-spin transition: a fixed full-screen overlay that
+     intercepts the CTA click, spins a 2D-illusion globe to a stop over
+     the United States, then hands off to index.html. Fully inert/hidden
+     until JS flips it on (and JS never does that under reduced-motion —
+     see the script block). The CSS below purely handles the visual
+     states; the actual spin (background-position-x of .globe-texture)
+     is driven by rAF in JS since it needs an exact, computed landing
+     offset rather than a generic keyframe loop.
+     =================================================================== */
+  .globe-transition{position:fixed;inset:0;z-index:80;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 42%,var(--sky-mid) 0%,var(--sky-top) 46%,#0A2440 78%,#061324 100%);
+    opacity:0;pointer-events:none;transition:opacity .35s ease;}
+  .globe-transition.is-active{opacity:1;pointer-events:auto;}
+  .globe-transition.is-leaving{transition:opacity .3s ease;}
+
+  .globe-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:20px;
+    transition:transform .3s ease-in,opacity .3s ease-in;}
+  .globe-transition.is-leaving .globe-stage{transform:scale(2.1);opacity:0;}
+
+  .globe{position:relative;width:clamp(170px,46vw,300px);height:clamp(170px,46vw,300px);
+    border-radius:50%;overflow:hidden;background:#0E3A63;
+    box-shadow:0 10px 26px rgba(2,10,20,.3),0 40px 90px rgba(2,10,20,.55);
+    transform:scale(.8);opacity:0;
+    transition:opacity .4s ease .05s,transform .5s cubic-bezier(.22,.85,.3,1) .05s;}
+  .globe-transition.is-active .globe{opacity:1;transform:scale(1);}
+
+  .globe-texture{position:absolute;inset:0;background-repeat:repeat-x;
+    background-position:0 0;background-size:auto 100%;}
+
+  /* sphere lighting: a bright limb top-left, a soft shadow bottom-right,
+     and an overall edge vignette so a flat scrolling strip reads as a
+     lit 3D ball rather than a spinning ribbon. */
+  .globe-shading{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:
+      radial-gradient(circle at 30% 26%,rgba(255,255,255,.55),rgba(255,255,255,0) 44%),
+      radial-gradient(circle at 70% 80%,rgba(2,8,18,.55),rgba(2,8,18,0) 55%),
+      radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 58%,rgba(0,0,0,.5) 100%);}
+  .globe-rim{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);}
+
+  .globe-pin{display:flex;flex-direction:column;align-items:center;gap:9px;
+    opacity:0;transform:translateY(-16px) scale(.6);
+    transition:opacity .35s ease,transform .45s cubic-bezier(.34,1.56,.64,1);}
+  .globe-pin.is-dropped{opacity:1;transform:translateY(0) scale(1);}
+  .globe-pin svg{display:block;width:30px;height:38px;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));}
+  .globe-caption{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:3px;
+    text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.45);}
+
+  @media (max-width:480px){
+    .globe-caption{font-size:10.5px;letter-spacing:2px;}
+  }
 </style>
 </head>
 <body>
@@ -243,7 +298,7 @@
 
         <div class="or-divider" aria-hidden="true">or</div>
 
-        <a class="cta-btn" href="index.html">See Map →</a>
+        <a class="cta-btn" id="seeMapBtn" href="index.html">See Map →</a>
       </div>
     </section>
 
@@ -254,6 +309,23 @@
   Pinpoint — a hand-drawn map of the United States.
   <a href="index.html">Skip straight to the map →</a>
 </footer>
+
+<div class="globe-transition" id="globeTransition" aria-hidden="true">
+  <div class="globe-stage">
+    <div class="globe" id="globeEl">
+      <div class="globe-texture" id="globeTexture"></div>
+      <div class="globe-shading"></div>
+      <div class="globe-rim"></div>
+    </div>
+    <div class="globe-pin" id="globePin">
+      <svg viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 23 15 23s15-12.5 15-23c0-8.3-6.7-15-15-15z" fill="#D9A441"/>
+        <circle cx="15" cy="15" r="6" fill="#1a1206"/>
+      </svg>
+      <p class="globe-caption">United States</p>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -302,6 +374,138 @@
   window.addEventListener('scroll', onScroll, {passive:true});
   window.addEventListener('resize', onScroll);
   update();
+
+  // =====================================================================
+  // "See Map" globe-spin transition.
+  //
+  // The globe is a circular, clipped viewport onto a wide, horizontally
+  // *tileable* world-strip SVG (background-repeat:repeat-x). Spinning it
+  // is just animating that strip's background-position-x — no 3D engine
+  // needed; the radial-gradient "shading" layer in CSS (highlight +
+  // limb-darkening) is what sells the illusion of a lit sphere.
+  //
+  // The strip is built so the United States landmass sits at a known
+  // natural-coordinate offset (USA_CENTER_X below). We always spin an
+  // exact number of full periods *plus* whatever extra distance lands
+  // that offset dead-center in the viewport, so the globe reliably comes
+  // to rest with the US centered no matter the viewport width.
+  // =====================================================================
+
+  var NATURAL_W = 1200;          // svg viewBox width  (one full "rotation")
+  var NATURAL_H = 300;           // svg viewBox height (maps to globe diameter)
+  var USA_CENTER_X = 1015;       // natural-coord x of the US landmass center
+
+  var worldStripSvg =
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + NATURAL_W + " " + NATURAL_H + "'>" +
+      "<rect width='" + NATURAL_W + "' height='" + NATURAL_H + "' fill='#0E3A63'/>" +
+      "<rect width='" + NATURAL_W + "' height='" + NATURAL_H + "' fill='#1E6FD9' opacity='0.35'/>" +
+      // faint latitude lines for a hint of globe-grid structure
+      "<g stroke='#ffffff' stroke-opacity='0.12' stroke-width='2' fill='none'>" +
+        "<line x1='0' y1='75' x2='" + NATURAL_W + "' y2='75'/>" +
+        "<line x1='0' y1='150' x2='" + NATURAL_W + "' y2='150'/>" +
+        "<line x1='0' y1='225' x2='" + NATURAL_W + "' y2='225'/>" +
+      "</g>" +
+      // landmass A (~x 90-300) — a generic far-side continent
+      "<g fill='#7fbf7f'>" +
+        "<ellipse cx='150' cy='155' rx='70' ry='52'/>" +
+        "<ellipse cx='215' cy='125' rx='52' ry='42'/>" +
+        "<ellipse cx='255' cy='175' rx='46' ry='36'/>" +
+        "<ellipse cx='110' cy='190' rx='38' ry='30'/>" +
+      "</g>" +
+      // landmass B (~x 480-760) — a second generic far-side continent
+      "<g fill='#6fae8f'>" +
+        "<ellipse cx='560' cy='118' rx='78' ry='58'/>" +
+        "<ellipse cx='650' cy='162' rx='68' ry='52'/>" +
+        "<ellipse cx='718' cy='108' rx='48' ry='40'/>" +
+        "<ellipse cx='600' cy='205' rx='44' ry='34'/>" +
+      "</g>" +
+      // North America / United States landmass (~x 900-1150) — the one
+      // we always land on; warm/gold so it reads as "the destination".
+      "<g fill='#f0cf7e'>" +
+        "<ellipse cx='955' cy='112' rx='72' ry='52'/>" +
+        "<ellipse cx='1040' cy='150' rx='82' ry='58'/>" +
+        "<ellipse cx='995' cy='192' rx='58' ry='40'/>" +
+        "<ellipse cx='1088' cy='118' rx='42' ry='34'/>" +
+      "</g>" +
+      "<circle cx='" + USA_CENTER_X + "' cy='150' r='5' fill='#D9A441' stroke='#fff' stroke-width='1.5'/>" +
+    "</svg>";
+
+  var globeTexture = document.getElementById('globeTexture');
+  if (globeTexture){
+    globeTexture.style.backgroundImage =
+      "url(\"data:image/svg+xml," + encodeURIComponent(worldStripSvg) + "\")";
+  }
+
+  var seeMapBtn = document.getElementById('seeMapBtn');
+  var globeTransition = document.getElementById('globeTransition');
+  var globeEl = document.getElementById('globeEl');
+  var globePin = document.getElementById('globePin');
+
+  if (seeMapBtn && globeTransition && globeEl && globePin){
+    seeMapBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      playGlobeSpin(seeMapBtn.href);
+    });
+  }
+
+  function easeOutQuint(t){ return 1 - Math.pow(1 - t, 5); }
+
+  function playGlobeSpin(destUrl){
+    var FADE_IN_MS = 350;     // overlay + globe appear
+    var SPIN_MS = 1600;       // the spin itself (two full turns + landing)
+    var PIN_HOLD_MS = 450;    // pin drops in, caption holds
+    var LEAVE_MS = 300;       // zoom-into-globe exit, then navigate
+    var navigated = false;
+
+    function go(){
+      if (navigated) return;
+      navigated = true;
+      window.location.href = destUrl;
+    }
+    // Safety net: never strand a visitor on the transition screen if a
+    // timer gets throttled (e.g. backgrounded tab) or anything else goes
+    // wrong — guarantee arrival at the map.
+    var safety = setTimeout(go, FADE_IN_MS + SPIN_MS + PIN_HOLD_MS + LEAVE_MS + 1500);
+
+    globeTransition.classList.add('is-active');
+
+    setTimeout(function(){
+      // offsetHeight (not getBoundingClientRect) deliberately: the globe
+      // is still mid-way through its entrance scale(.8)->scale(1) CSS
+      // transition at this point, and getBoundingClientRect reports the
+      // transformed (shrunk) box, which would throw off the landing math.
+      // offsetHeight reflects the untransformed layout size instead.
+      var scale = globeEl.offsetHeight / NATURAL_H; // natural texture units -> rendered px
+      // Two full rotations, then continue just far enough that the US
+      // landmass's natural x-coordinate lands in the center of the
+      // viewport. The globe is square (width === height), so with
+      // background-size:auto 100% the visible window is NATURAL_H wide
+      // in natural coordinates regardless of actual rendered size —
+      // at offset O the window shows [O, O + NATURAL_H], centered at
+      // O + NATURAL_H/2.
+      var targetWithinPeriod = ((USA_CENTER_X - NATURAL_H / 2) % NATURAL_W + NATURAL_W) % NATURAL_W;
+      var totalNaturalOffset = NATURAL_W * 2 + targetWithinPeriod;
+      var start = null;
+
+      function frame(ts){
+        if (start === null) start = ts;
+        var t = Math.min(1, (ts - start) / SPIN_MS);
+        var eased = easeOutQuint(t);
+        var offsetPx = -(eased * totalNaturalOffset * scale);
+        globeTexture.style.backgroundPositionX = offsetPx + 'px';
+        if (t < 1){
+          requestAnimationFrame(frame);
+        } else {
+          globePin.classList.add('is-dropped');
+          setTimeout(function(){
+            globeTransition.classList.add('is-leaving');
+            setTimeout(function(){ clearTimeout(safety); go(); }, LEAVE_MS);
+          }, PIN_HOLD_MS);
+        }
+      }
+      requestAnimationFrame(frame);
+    }, FADE_IN_MS);
+  }
 })();
 </script>
 
