@@ -15,3 +15,6 @@ npm-debug.log*
 # Logs
 *.log
 Pinpoint-repo.zip
+
+# Agent scratch space (isolated worktrees for background subagent tasks)
+.claude/worktrees/
