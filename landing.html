@@ -197,8 +197,13 @@
        (the column's main axis), ballooning it into a huge pill. Reset
        both children to natural auto-height, full-width stacking. */
     .place-form{flex-direction:column;}
-    .place-input{flex:0 0 auto;width:100%;}
-    .place-submit{flex:0 0 auto;width:100%;}
+    .place-input{flex:0 0 auto;width:100%;
+      /* Smaller footprint on phones — less vertical padding, slightly
+         tighter radius. Font-size stays at 16px: anything smaller makes
+         iOS Safari auto-zoom the page on focus. */
+      padding:10px 16px;border-radius:14px;}
+    .place-submit{flex:0 0 auto;width:100%;padding:10px 16px;}
+    .gateway{padding:clamp(20px,5vw,28px) clamp(18px,5vw,26px);}
   }
 </style>
 </head>
