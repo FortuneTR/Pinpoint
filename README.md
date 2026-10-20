@@ -18,9 +18,10 @@ Covers all 50 states **and Washington, D.C.**
   side list. Click a pin *or* a list row to read the site's story and fly the camera to it.
 - **Back to the U.S.** — zoom back out and the state markers return.
 
-The prototype (`index.html`) is fully working: state data is seeded for all 51 jurisdictions,
+The map (`map.html`) is fully working: state data is seeded for all 51 jurisdictions,
 and historic sites are seeded for California, Florida, Massachusetts, New York, Pennsylvania,
-Texas, and D.C. so you can feel the full interaction end-to-end.
+Texas, and D.C. so you can feel the full interaction end-to-end. `index.html` is a cinematic
+landing page that leads into it.
 
 ---
 
@@ -72,7 +73,8 @@ pre-generate JSON) without rewriting the front end.
 
 ```
 Pinpoint/
-├── index.html            # Self-contained prototype (data inlined) — just open it
+├── index.html            # Cinematic landing page — the site's entry point
+├── map.html              # Self-contained map app (data inlined) — just open it
 ├── data/
 │   └── states.js         # Modular version of the dataset (50 states + D.C. + sites)
 ├── css/                  # (future) extracted styles
@@ -81,7 +83,7 @@ Pinpoint/
 └── README.md
 ```
 
-`index.html` ships self-contained so it previews anywhere. `data/states.js` is the same data as
+`map.html` ships self-contained so it previews anywhere. `data/states.js` is the same data as
 an external module — switch to it once the dataset grows past what's comfortable to inline (just
 add `<script src="data/states.js"></script>` back and delete the inline block).
 

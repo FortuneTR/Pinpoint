@@ -156,7 +156,8 @@
     "caveat": "Seed statehood dates and name origins are best-effort; verify against the Census and state archives before treating as authoritative, and cite sources in the UI."
   },
   "repoStructure": {
-    "index.html": "Self-contained prototype (data inlined) — opens with no server.",
+    "index.html": "Cinematic landing page — the site's entry point.",
+    "map.html": "Self-contained map app (data inlined) — opens with no server.",
     "data/states.js": "Seed dataset as a JS module (window.PINPOINT_STATES).",
     "data/states.json": "Same seed dataset as pure JSON (fetch this in the modular build).",
     "pinpoint.project.json": "This file — the full project ideation as structured JSON.",
